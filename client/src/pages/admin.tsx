@@ -1,10 +1,11 @@
 import { useState, useEffect } from "react";
 import {
-  LayoutDashboard, UserCheck, School, ChartBar,
+  LayoutDashboard, School, ChartBar,
   LucidePiggyBank, Newspaper, User, IdCard,
   BarChart
 } from "lucide-react";
 import { useAuth } from "../contexts/AuthContext";
+import { Outlet, useNavigate, useLocation } from "react-router-dom";
 
 import { TableViewDataUser } from "@/components/admin/AdminDataUser";
 import { AdminDashboard } from "@/components/admin/AdminDashboard";
@@ -16,7 +17,29 @@ import { AdminAccounting } from "@/components/admin/AdminAccounting";
 
 const AdminPage = () => {
   const [activePanel, setActivePanel] = useState("dashboard");
-  const { isAuthenticated, isRole } = useAuth();
+  const { isAuthenticated } = useAuth();
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  // Update active panel based on current route
+  useEffect(() => {
+    const path = location.pathname;
+    if (path === "/admin" || path === "/admin/") {
+      setActivePanel("dashboard");
+    } else if (path === "/admin/datauser") {
+      setActivePanel("datauser");
+    } else if (path === "/admin/beasiswa") {
+      setActivePanel("beasiswa");
+    } else if (path === "/admin/laporan") {
+      setActivePanel("laporan");
+    } else if (path === "/admin/donasi") {
+      setActivePanel("donasi");
+    } else if (path === "/admin/berita") {
+      setActivePanel("berita");
+    } else if (path === "/admin/profile") {
+      setActivePanel("profil");
+    }
+  }, [location.pathname]);
 
   // Cek localStorage saat pertama render
   useEffect(() => {
@@ -30,25 +53,17 @@ const AdminPage = () => {
   }, [activePanel]);
 
   const navItems = [
-    { key: "dashboard", icon: <LayoutDashboard size={24} /> },
-    { key: "datauser", icon: <IdCard size={24} /> },
-    { key: "beasiswa", icon: <School size={24} /> },
-    { key: "laporan", icon: <BarChart size={24} /> },
-    { key: "donasi", icon: <LucidePiggyBank size={24} /> },
-    { key: "berita", icon: <Newspaper size={24} /> },
+    { key: "dashboard", icon: <LayoutDashboard size={24} />, path: "/admin"},
+    { key: "datauser", icon: <IdCard size={24} />, path: "/admin/datauser"},
+    { key: "beasiswa", icon: <School size={24} />, path: "/admin/beasiswa"},
+    { key: "laporan", icon: <BarChart size={24} />, path: "/admin/laporan" },
+    { key: "donasi", icon: <LucidePiggyBank size={24} />, path: "/admin/donasi"},
+    { key: "berita", icon: <Newspaper size={24} />, path: "/admin/berita"},
   ];
 
-  const renderPanel = () => {
-    switch (activePanel) {
-      case "dashboard": return <AdminDashboard />;
-      case "datauser": return <TableViewDataUser />;
-      case "beasiswa": return <AdminScholarship />;
-      case "laporan": return <AdminStatistic />;
-      case "donasi": return <AdminAccounting />;
-      case "berita": return <AdminNews />;
-      case "profil": return <AdminProfile />;
-      default: return <AdminDashboard />;
-    }
+  const handleNavigation = (item: any) => {
+    setActivePanel(item.key);
+    navigate(item.path);
   };
 
   return (
@@ -79,7 +94,7 @@ const AdminPage = () => {
             {navItems.map(item => (
               <button
                 key={item.key}
-                onClick={() => setActivePanel(item.key)}
+                onClick={() => handleNavigation(item)}
                 className={`p-2 rounded-full flex items-center justify-center transition 
                   ${activePanel === item.key
                     ? "bg-blue-500 text-white shadow-md"
@@ -93,7 +108,10 @@ const AdminPage = () => {
           {/* Profile */}
           <div className="flex flex-col items-center">
             <button
-              onClick={() => setActivePanel("profil")}
+              onClick={() => { 
+                setActivePanel("profil"); 
+                navigate(isAuthenticated ? "/admin/profile" : "/auth/login");
+              }}
               className={`p-2 rounded-full flex items-center justify-center transition 
                 ${activePanel === "profil"
                   ? "bg-blue-500 text-white shadow-md"
@@ -106,7 +124,7 @@ const AdminPage = () => {
 
         {/* Panel Konten */}
         <div className="flex-1 ml-14 transition-all duration-300 overflow-y-auto">
-          {renderPanel()}
+          <Outlet />
         </div>
       </div>
     </>

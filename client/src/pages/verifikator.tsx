@@ -1,10 +1,11 @@
 import { useState, useEffect } from "react";
 import {
-  LayoutDashboard, UserCheck, School, ChartBar,
+  LayoutDashboard, School, ChartBar,
   LucidePiggyBank, Newspaper, User, IdCard,
   BarChart
 } from "lucide-react";
 import { useAuth } from "../contexts/AuthContext";
+import { Outlet, useNavigate, useLocation } from "react-router-dom";
 
 import { TableViewDataUser } from "@/components/admin/AdminDataUser";
 import { AdminDashboard } from "@/components/admin/AdminDashboard";
@@ -16,39 +17,53 @@ import { AdminAccounting } from "@/components/admin/AdminAccounting";
 
 const VerifikatorPage = () => {
   const [activePanel, setActivePanel] = useState("dashboard");
-  const { isAuthenticated, isRole } = useAuth();
+  const { isAuthenticated } = useAuth();
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  // Update active panel based on current route
+  useEffect(() => {
+    const path = location.pathname;
+    if (path === "/verifikator" || path === "/verifikator/") {
+      setActivePanel("dashboard");
+    } else if (path === "/verifikator/datauser") {
+      setActivePanel("datauser");
+    } else if (path === "/verifikator/beasiswa") {
+      setActivePanel("beasiswa");
+    } else if (path === "/verifikator/laporan") {
+      setActivePanel("laporan");
+    } else if (path === "/verifikator/donasi") {
+      setActivePanel("donasi");
+    } else if (path === "/verifikator/berita") {
+      setActivePanel("berita");
+    } else if (path === "/verifikator/profile") {
+      setActivePanel("profil");
+    }
+  }, [location.pathname]);
 
   // Cek localStorage saat pertama render
   useEffect(() => {
-    const savedPanel = localStorage.getItem("adminActivePanel");
+    const savedPanel = localStorage.getItem("verifikatorActivePanel");
     if (savedPanel) setActivePanel(savedPanel);
   }, []);
 
   // Simpan setiap kali panel berubah
   useEffect(() => {
-    localStorage.setItem("adminActivePanel", activePanel);
+    localStorage.setItem("verifikatorActivePanel", activePanel);
   }, [activePanel]);
 
   const navItems = [
-    { key: "dashboard", icon: <LayoutDashboard size={24} /> },
-    { key: "datauser", icon: <IdCard size={24} /> },
-    { key: "beasiswa", icon: <School size={24} /> },
-    { key: "laporan", icon: <BarChart size={24} /> },
-    { key: "donasi", icon: <LucidePiggyBank size={24} /> },
-    { key: "berita", icon: <Newspaper size={24} /> },
+    { key: "dashboard", icon: <LayoutDashboard size={24} />, path: "/verifikator"},
+    { key: "datauser", icon: <IdCard size={24} />, path: "/verifikator/datauser"},
+    { key: "beasiswa", icon: <School size={24} />, path: "/verifikator/beasiswa"},
+    { key: "laporan", icon: <BarChart size={24} />, path: "/verifikator/laporan" },
+    { key: "donasi", icon: <LucidePiggyBank size={24} />, path: "/verifikator/donasi"},
+    { key: "berita", icon: <Newspaper size={24} />, path: "/verifikator/berita"},
   ];
 
-  const renderPanel = () => {
-    switch (activePanel) {
-      case "dashboard": return <AdminDashboard />;
-      case "datauser": return <TableViewDataUser />;
-      case "beasiswa": return <AdminScholarship />;
-      case "laporan": return <AdminStatistic />;
-      case "donasi": return <AdminAccounting />;
-      case "berita": return <AdminNews />;
-      case "profil": return <AdminProfile />;
-      default: return <AdminDashboard />;
-    }
+  const handleNavigation = (item: any) => {
+    setActivePanel(item.key);
+    navigate(item.path);
   };
 
   return (
@@ -61,7 +76,7 @@ const VerifikatorPage = () => {
             Akses Terbatas
           </h1>
           <p className="text-zinc-600 dark:text-zinc-400 text-sm leading-relaxed">
-            Halaman <span className="font-medium text-blue-500">Admin Dashboard</span> hanya tersedia untuk perangkat dengan layar lebar seperti <span className="font-medium">desktop</span> atau <span className="font-medium">tablet</span>.
+            Halaman <span className="font-medium text-blue-500">Verifikator Dashboard</span> hanya tersedia untuk perangkat dengan layar lebar seperti <span className="font-medium">desktop</span> atau <span className="font-medium">tablet</span>.
           </p>
           <p className="mt-4 text-sm text-zinc-500 dark:text-zinc-500">
             Silakan buka halaman ini di perangkat yang lebih besar untuk pengalaman terbaik.
@@ -79,7 +94,7 @@ const VerifikatorPage = () => {
             {navItems.map(item => (
               <button
                 key={item.key}
-                onClick={() => setActivePanel(item.key)}
+                onClick={() => handleNavigation(item)}
                 className={`p-2 rounded-full flex items-center justify-center transition 
                   ${activePanel === item.key
                     ? "bg-blue-500 text-white shadow-md"
@@ -93,7 +108,10 @@ const VerifikatorPage = () => {
           {/* Profile */}
           <div className="flex flex-col items-center">
             <button
-              onClick={() => setActivePanel("profil")}
+              onClick={() => { 
+                setActivePanel("profil"); 
+                navigate(isAuthenticated ? "/verifikator/profile" : "/auth/login");
+              }}
               className={`p-2 rounded-full flex items-center justify-center transition 
                 ${activePanel === "profil"
                   ? "bg-blue-500 text-white shadow-md"
@@ -106,7 +124,7 @@ const VerifikatorPage = () => {
 
         {/* Panel Konten */}
         <div className="flex-1 ml-14 transition-all duration-300 overflow-y-auto">
-          {renderPanel()}
+          <Outlet />
         </div>
       </div>
     </>

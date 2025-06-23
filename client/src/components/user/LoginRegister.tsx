@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -18,7 +17,7 @@ const LoginRegister = () => {
   const [loading, setLoading] = useState(false);
   
   const navigate = useNavigate();
-  const { login, register } = useAuth();
+  const { login, register, isRole } = useAuth();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -37,12 +36,19 @@ const LoginRegister = () => {
 
       if (!success) {
         setError(isLogin ? 'Email atau password salah' : 'Gagal mendaftar');
-      }else {
+      } else {
         setSuccess(isLogin ? 'Login Success' : 'Register Success, silahkan login')
         if (!isLogin) {
           setIsLogin(true)
         } else {
-          navigate('/dashboard');
+          // Redirect based on role
+          if (isRole === "admin") {
+            navigate('/admin');
+          } else if (isRole === "verifikator") {
+            navigate('/verifikator');
+          } else {
+            navigate('/user');
+          }
         }
       }
     } catch (err: any) {
