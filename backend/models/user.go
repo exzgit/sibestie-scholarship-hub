@@ -7,126 +7,95 @@ import (
 )
 
 // ---------- USERS ----------
+// User is a user of the system
 type User struct {
 	gorm.Model
-	Name        string `gorm:"type:varchar(100)"`
-	Email       string `gorm:"uniqueIndex;type:varchar(100)"`
-	Role        string `gorm:"type:varchar(50)"`
-	Password    string
-	IsVerified  bool
-
-	// One-to-One
-	Personal    Personal
-	Economy     Economy
-	Verification AccountVerification
-
-	// One-to-Many
-	Families    []Family
-	Academics   []Academic
-	Semesters   []SemesterScore
-	Images      []Image
+	Name     string `gorm:"type:varchar(100)"`
+	Email    string `gorm:"uniqueIndex;type:varchar(100)"`
+	Role     string `gorm:"type:varchar(50)"`
+	Password string
 }
 
-// ---------- PERSONAL ----------
-type Personal struct {
+// ---------- USER VERIFICATION ----------
+// UserVerification is a verification of the user
+type UserVerification struct {
+	gorm.Model
+	UserID   uint
+	Pending  bool
+	Verified bool
+	Rejected bool
+}
+
+// ---------- VERIFICATION STACK ----------
+// VerificationStack is a stack of verification
+type VerificationStack struct {
 	gorm.Model
 	UserID       uint
-	NIK          string `gorm:"type:varchar(20)"`
-	NISN         string `gorm:"type:varchar(20)"`
-	FullName     string
-	BirthDate    time.Time
-	BirthPlace   string
-	SchoolOrigin string
-	Graduated    string
-	GraduationYear string
-
-	NomorTelepon string
-
-	KTPImageID uint
-	KTPImage   Image
-
-	KKImageID  uint
-	KKImage    Image
-
-	Instagram string `gorm:"type:text"`
-	Facebook string `gorm:"type:text"`
-	Tiktok string `gorm:"type:text"`
-	Website string `gorm:"type:text"`
-	other string `gorm:"type:text"`
+	Verification UserVerification `gorm:"foreignKey:UserID"`
+	UserData     UserData         `gorm:"foreignKey:UserID"`
 }
 
-// ---------- FAMILY ----------
-type Family struct {
+// ---------- USER DATA ----------
+// UserData is a data of the user
+type UserData struct {
 	gorm.Model
-	UserID         uint
-	FatherName     string
-	FatherJob      string
-	FatherEdu      string
-	MotherName     string
-	MotherJob      string
-	MotherEdu      string
-	Address        string
 
-	Children    []Child
-	KKImages    []Image `gorm:"foreignKey:FamilyID"`
+	// Personal Data
+	UserID         uint
+	NIK            string `gorm:"type:varchar(20)"`
+	NISN           string `gorm:"type:varchar(20)"`
+	FullName       string `gorm:"type:varchar(100)"`
+	BirthDate      time.Time
+	BirthPlace     string
+	SchoolOrigin   string
+	Graduated      string
+	GraduationYear string
+	NomorTelepon   string
+
+	// Family Data
+	FamilyID uint
+	Family   Family `gorm:"foreignKey:FamilyID"`
+
+	// Academic Data
+	SourceSertificated []SourceFile `gorm:"foreignKey:UserDataID"`
 }
 
 // ---------- CHILDREN ----------
-type Child struct {
+// Children is a child of the family
+type Children struct {
 	gorm.Model
 	FamilyID uint
-	Name     string
-	Status   string // contoh: Kakak / Adik
+	FullName string
+	Status   string
 }
 
-// ---------- IMAGE ----------
-type Image struct {
+// ---------- FAMILY ----------
+// Family is a family of the user
+type Family struct {
 	gorm.Model
-	UserID    uint
-	FamilyID  *uint
-	Label     string // ex: "KTP", "KK", "Ijazah"
-	Data      []byte `gorm:"type:longblob"`
+
+	FatherName   string
+	FatherJob    string
+	FatherSalary int
+
+	MotherName   string
+	MotherJob    string
+	MotherSalary int
+
+	Address string
+
+	Children []Children `gorm:"foreignKey:FamilyID"`
+
+	SourceKKID uint
+	SourceKK   SourceFile `gorm:"foreignKey:SourceKKID"`
 }
 
-// ---------- ACADEMIC ----------
-type Academic struct {
+// ---------- SOURCE FILE ----------
+// Source File is a file that is uploaded by the user
+type SourceFile struct {
 	gorm.Model
-	UserID      uint
-	GraduationYear string
-
-	IjazahImageID uint
-	IjazahImage   Image
-
-	RaporImageID  uint
-	RaporImage    Image
-}
-
-// ---------- SEMESTER SCORE ----------
-type SemesterScore struct {
-	gorm.Model
-	UserID     uint
-	Semester   int
-	Math       float64
-	Indonesian float64
-	English    float64
-	Science    float64
-	Social     float64
-}
-
-// ---------- ECONOMY ----------
-type Economy struct {
-	gorm.Model
-	UserID      uint
-	Job         string
-	Income      string
-	Dependents  int
-}
-
-// ---------- ACCOUNT VERIFICATION ----------
-type AccountVerification struct {
-	gorm.Model
-	UserID     uint
-	Status     string `gorm:"type:varchar(20)"` // contoh: "pending", "verified"
-	Token      string
-	ExpiresAt  time.Time
+	UserDataID uint   `gorm:"default:0"`
+	SourceType string `gorm:"type:varchar(100)"`
+	SourceName string `gorm:"type:varchar(100)"`
+	SourceData []byte `gorm:"type:longblob"`
 }

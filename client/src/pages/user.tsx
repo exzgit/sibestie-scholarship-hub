@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from "react";
 import { Home, Newspaper, Award, Info, Phone, User } from "lucide-react";
 import HomePanel from "../components/user/HomePanel";
@@ -10,22 +9,45 @@ import ProfilePanel from "../components/user/ProfilePanel";
 import LoginRegister from "../components/user/LoginRegister";
 import { useAuth } from "../contexts/AuthContext";
 import VerifikasiPanel from "@/components/user/VerifikasiPanel";
+import { Outlet, useNavigate, useLocation } from "react-router-dom";
 
 const UserPage = () => {
   const [activePanel, setActivePanel] = useState("home");
-  const { isAuthenticated, isRole } = useAuth();
+  const { isAuthenticated } = useAuth();
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  // Update active panel based on current route
+  useEffect(() => {
+    const path = location.pathname;
+    if (path === "/user" || path === "/user/") {
+      setActivePanel("home");
+    } else if (path === "/user/berita") {
+      setActivePanel("berita");
+    } else if (path === "/user/beasiswa") {
+      setActivePanel("beasiswa");
+    } else if (path === "/user/informasi") {
+      setActivePanel("informasi");
+    } else if (path === "/user/konsultasi") {
+      setActivePanel("konsultasi");
+    } else if (path === "/user/profile") {
+      setActivePanel("profile");
+    } else if (path === "/user/verifikasi") {
+      setActivePanel("verifikasi");
+    }
+  }, [location.pathname]);
 
   // Cek localStorage saat pertama render
   useEffect(() => {
-    const savedPanel = localStorage.getItem("adminActivePanel");
+    const savedPanel = localStorage.getItem("userActivePanel");
     if (savedPanel) setActivePanel(savedPanel);
   }, []);
 
   // Simpan setiap kali panel berubah
   useEffect(() => {
-    localStorage.setItem("adminActivePanel", activePanel);
+    localStorage.setItem("userActivePanel", activePanel);
   }, [activePanel]);
-  
+
   const renderPanel = () => {
     switch (activePanel) {
       case "home":
@@ -51,19 +73,24 @@ const UserPage = () => {
   };
 
   const navigationItems = [
-    { id: "home", icon: Home, label: "Home" },
-    { id: "berita", icon: Newspaper, label: "Berita" },
-    { id: "beasiswa", icon: Award, label: "Beasiswa" },
-    { id: "informasi", icon: Info, label: "Info" },
-    { id: "konsultasi", icon: Phone, label: "Konsultasi" },
-    { id: "profile", icon: User, label: "Profile" },
+    { id: "home", icon: Home, label: "Home", path: "/user"},
+    { id: "berita", icon: Newspaper, label: "Berita", path: "/user/berita" },
+    { id: "beasiswa", icon: Award, label: "Beasiswa", path: "/user/beasiswa" },
+    { id: "informasi", icon: Info, label: "Info", path: "/user/informasi" },
+    { id: "konsultasi", icon: Phone, label: "Konsultasi", path: "/user/konsultasi" },
+    { id: "profile", icon: User, label: "Profile", path: isAuthenticated ? "/user/profile" : "/auth/login" },
   ];
+
+  const handleNavigation = (item: any) => {
+    setActivePanel(item.id);
+    navigate(item.path);
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 pb-20">
       {/* Main Content */}
       <div className="min-h-screen overflow-y-auto">
-        {renderPanel()}
+        <Outlet />
       </div>
 
       {/* Bottom Navigation */}
@@ -72,7 +99,7 @@ const UserPage = () => {
           {navigationItems.map((item) => (
             <button
               key={item.id}
-              onClick={() => setActivePanel(item.id)}
+              onClick={() => handleNavigation(item)}
               className={`flex flex-col items-center justify-center p-2 rounded-lg transition-all duration-200 ${
                 activePanel === item.id
                   ? "text-blue-600 bg-blue-50"

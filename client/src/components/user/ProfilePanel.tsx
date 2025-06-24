@@ -1,21 +1,22 @@
-
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useAuth } from "@/contexts/AuthContext";
+import { useNavigate } from "react-router-dom";
 
-interface ProfilePanelProps {
-  onVerificationClick?: () => void;
-}
-
-const ProfilePanel = ({ onVerificationClick }: ProfilePanelProps) => {
+const ProfilePanel = () => {
   const { user, logout } = useAuth();
+  const navigate = useNavigate();
 
   // Use data from user context (from KTP registration)
   const userData = {
     foto: "",
     name: user?.name || 'user.example',
     email: user?.email || 'user@example.com',
+  };
+
+  const handleVerificationClick = () => {
+    navigate('/user/verifikasi');
   };
 
   return (
@@ -39,7 +40,7 @@ const ProfilePanel = ({ onVerificationClick }: ProfilePanelProps) => {
               </div>
             </div>
             {!user?.isVerified && (
-              <Button onClick={onVerificationClick} className="bg-blue-600 hover:bg-blue-700">
+              <Button onClick={handleVerificationClick} className="bg-blue-600 hover:bg-blue-700">
                 Verifikasi Akun
               </Button>
             )}

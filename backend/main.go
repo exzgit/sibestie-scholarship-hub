@@ -5,14 +5,15 @@ import (
 	"log"
 	"os"
 
-	"github.com/joho/godotenv"
-	"github.com/gin-contrib/cors"
-    "time"
-	"github.com/gin-gonic/gin"
+	"time"
 
-	"sibestie/models" 
+	"github.com/gin-contrib/cors"
+	"github.com/gin-gonic/gin"
+	"github.com/joho/godotenv"
+
 	"sibestie/config"
 	"sibestie/controllers"
+	"sibestie/models"
 )
 
 func init() {
@@ -37,20 +38,18 @@ func main() {
 
 	config.DB.AutoMigrate(
 		&models.User{},
-		&models.Personal{},
-		&models.Family{},
-		&models.Child{},
-		&models.Image{},
-		&models.Academic{},
-		&models.SemesterScore{},
-		&models.Economy{},
-		&models.AccountVerification{},
 		&models.Beasiswa{},
+		&models.UserData{},
+		&models.Family{},
+		&models.Children{},
+		&models.SourceFile{},
+		&models.UserVerification{},
+		&models.VerificationStack{},
 		&models.Pendaftar{},
 	)
 
 	r := gin.Default()
-	
+
 	r.Use(cors.New(cors.Config{
 		AllowOrigins:     []string{fmt.Sprintf("http://localhost:%s", fport), fmt.Sprintf("http://%s:%s", ip, fport)},
 		AllowMethods:     []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
@@ -60,7 +59,7 @@ func main() {
 		MaxAge:           12 * time.Hour,
 	}))
 
-    setupRoutes(r)
+	setupRoutes(r)
 
 	// r.GET("/", func(c *gin.Context) {
 	// 	c.JSON(http.StatusOK, gin.H{
@@ -68,7 +67,7 @@ func main() {
 	// 	})
 	// })
 
-	if err := r.Run(os.Getenv("IP_ADDRESS") + ":" + os.Getenv("BACKEND_PORT")); err != nil {	
+	if err := r.Run(os.Getenv("IP_ADDRESS") + ":" + os.Getenv("BACKEND_PORT")); err != nil {
 		log.Fatal("Server error:", err)
 	}
 }

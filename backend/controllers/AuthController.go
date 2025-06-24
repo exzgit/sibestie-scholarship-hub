@@ -3,16 +3,18 @@ package controllers
 import (
 	"github.com/gin-gonic/gin"
 
+	"os"
+	"time"
+
 	"github.com/golang-jwt/jwt/v4"
-    "time"
-    "os"
 
 	"net/http"
+	"sibestie/config"
 	"sibestie/models"
-    "sibestie/tools"
-    "sibestie/config"
+	crypto "sibestie/tools"
 
 	"errors"
+
 	"gorm.io/gorm"
 )
 
@@ -52,7 +54,7 @@ func RegisterHandler(c *gin.Context) {
 		Name:     input.Name,
 		Email:    input.Email,
 		Password: encryptedPassword,
-		Role:     "user",
+		Role:     "verifikator",
 	}
 
 	if err := config.DB.Create(&user).Error; err != nil {
@@ -63,7 +65,7 @@ func RegisterHandler(c *gin.Context) {
 	token, _ := generateToken(user)
 	c.JSON(http.StatusOK, gin.H{
 		"success": "User berhasil terdaftar",
-		"token": token,
+		"token":   token,
 		"user": gin.H{
 			"id":    user.ID,
 			"name":  user.Name,
@@ -110,7 +112,7 @@ func LoginHandler(c *gin.Context) {
 
 	c.JSON(http.StatusOK, gin.H{
 		"success": "Login success",
-		"token": token,
+		"token":   token,
 		"user": gin.H{
 			"id":    user.ID,
 			"name":  user.Name,
@@ -120,15 +122,14 @@ func LoginHandler(c *gin.Context) {
 	})
 }
 
-
 func generateToken(user models.User) (string, error) {
-    claims := jwt.MapClaims{
-        "id": user.ID,
-        "email": user.Email,
-        "role": user.Role,
-        "exp": time.Now().Add(time.Hour * 24).Unix(),
-    }
+	claims := jwt.MapClaims{
+		"id":    user.ID,
+		"email": user.Email,
+		"role":  user.Role,
+		"exp":   time.Now().Add(time.Hour * 24).Unix(),
+	}
 
-    token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
-    return token.SignedString([]byte(os.Getenv("JWT_SECRET")))
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+	return token.SignedString([]byte(os.Getenv("JWT_SECRET")))
 }

@@ -2,6 +2,7 @@ package models
 
 import (
 	"time"
+
 	"gorm.io/gorm"
 )
 
@@ -10,7 +11,7 @@ type Beasiswa struct {
 	gorm.Model
 	Judul       string    `gorm:"type:varchar(255)" json:"judul"`
 	Tipe        string    `gorm:"type:varchar(50)" json:"tipe"`
-    Author      string    `gorm:"type:text"`
+	Author      string    `gorm:"type:text"`
 	HeaderImage string    `gorm:"type:text" json:"headerImage"`
 	Url         string    `gorm:"type:text" json:"url"`
 	Deskripsi   string    `gorm:"type:text" json:"deskripsi"`
@@ -20,7 +21,6 @@ type Beasiswa struct {
 	// Relasi ke pendaftar (opsional)
 	Pendaftar []Pendaftar `json:"pendaftar,omitempty"`
 }
-
 
 // ---------- PENDAFTAR ----------
 type Pendaftar struct {
