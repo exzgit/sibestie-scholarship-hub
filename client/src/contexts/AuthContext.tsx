@@ -7,6 +7,7 @@ interface User {
   name: string;
   role: 'user' | 'admin' | 'verifikator';
   isVerified: boolean;
+  verificationStatus?: 'pending' | 'verified' | 'rejected' | null;
 }
 
 interface AuthContextType {
@@ -20,30 +21,69 @@ interface AuthContextType {
   logout: () => void;
   isAuthenticated: boolean;
   isRole: string;
+  checkVerificationStatus: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    // Check localStorage for existing session
     const savedUser = localStorage.getItem('user');
     if (savedUser) {
-      setUser(JSON.parse(savedUser));
+      try {
+        setUser(JSON.parse(savedUser));
+      } catch {
+        setUser(null);
+        localStorage.removeItem('user');
+      }
     }
+    setIsLoading(false);
   }, []);
+
+  // Check if the user has submitted verification data
+  const checkVerificationStatus = async () => {
+    if (!user) return;
+    
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) return;
+      
+      const response = await axios.get(`http://127.0.0.1:8081/api/verifikasi/status/${user.id}`, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+      
+      const status = response.data.status;
+      const updatedUser = {
+        ...user,
+        verificationStatus: status,
+        isVerified: status === 'approved',
+      };
+      
+      setUser(updatedUser);
+      localStorage.setItem('user', JSON.stringify(updatedUser));
+    } catch (err) {
+      console.error("Failed to check verification status:", err);
+    }
+  };
+
+  useEffect(() => {
+    if (user && user.role === 'user' && !user.verificationStatus) {
+      checkVerificationStatus();
+    }
+  }, [user]);
 
   const login = async (email: string, password: string) => {
     try {
       const res = await axios.post('http://127.0.0.1:8081/login', { email, password });
       const { token, user } = res.data;
-
-      // Simpan sesi
+      user.role = user.role?.toLowerCase();
       localStorage.setItem("token", token);
       localStorage.setItem("user", JSON.stringify(user));
-
       setUser(user);
       return true;
     } catch (err) {
@@ -67,6 +107,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     localStorage.removeItem('token');
   };
 
+  if (isLoading) {
+    return <div className="min-h-screen flex items-center justify-center text-lg">Loading...</div>;
+  }
+
   return (
     <AuthContext.Provider
       value={{
@@ -75,7 +119,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         register,
         logout,
         isAuthenticated: !!user,
-        isRole: user?.role
+        isRole: user?.role,
+        checkVerificationStatus
       }}
     >
       {children}
