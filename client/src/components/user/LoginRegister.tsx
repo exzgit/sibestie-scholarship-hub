@@ -5,6 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useAuth } from '@/contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
+import { ArrowLeft, ArrowLeftCircleIcon, ArrowLeftSquareIcon, HomeIcon } from 'lucide-react';
 
 const LoginRegister = () => {
   const [isLogin, setIsLogin] = useState(true);
@@ -37,22 +38,24 @@ const LoginRegister = () => {
       if (!success) {
         setError(isLogin ? 'Email atau password salah' : 'Gagal mendaftar');
       } else {
-        setSuccess(isLogin ? 'Login Success' : 'Register Success, silahkan login')
+        setSuccess(isLogin ? 'Login berhasil!' : 'Registrasi berhasil, silahkan login')
         if (!isLogin) {
           setIsLogin(true)
         } else {
-          // Redirect based on role
+          // Redirect based on role to their authorized page
           if (isRole === "admin") {
             navigate('/admin');
           } else if (isRole === "verifikator") {
             navigate('/verifikator');
-          } else {
+          } else if (isRole === "user") {
             navigate('/user');
+          } else {
+            navigate('/')
           }
         }
       }
     } catch (err: any) {
-      console.error("Register Error:", err);
+      console.error("Auth Error:", err);
 
       if (err.response?.data?.error) {
         setError(err.response.data.error);
@@ -66,11 +69,22 @@ const LoginRegister = () => {
 
   return (
     <div className="min-h-screen flex items-center justify-center p-4 bg-gradient-to-br from-blue-50 to-indigo-100">
-      <Card className="w-full max-w-md shadow-lg">
+      <Card className="relative w-full max-w-md shadow-lg">
+        
         <CardHeader className="text-center">
-          <CardTitle className="text-2xl font-bold text-gray-800">
-            {isLogin ? 'Masuk' : 'Daftar'} SIBESTIE
-          </CardTitle>
+          {/* <Button 
+            size='icon'
+            className="absolute rounded-none rounded-br-lg rounded-tl-lg border-b border-r top-0 left-0 bg-blue-400 border-blue-400 hover:bg-transparent text-white hover:text-blue-500"
+            onClick={() => {navigate('/user')}}
+          >
+            <ArrowLeftSquareIcon size={36} />
+          </Button> */}
+          <div className='flex justify-center'>
+            
+            <CardTitle className="text-2xl font-bold text-gray-800">
+              {isLogin ? 'Masuk' : 'Daftar'} SIBESTIE
+            </CardTitle>
+          </div>
           <p className="text-gray-600">
             {isLogin ? 'Masuk ke akun Anda' : 'Buat akun baru'}
           </p>
@@ -118,20 +132,23 @@ const LoginRegister = () => {
             </div>
 
             {success && (
-              <div className="text-green-600 text-sm text-center">{success}</div>
+              <div className="text-green-600 text-sm text-center bg-green-50 p-2 rounded">{success}</div>
             )}
 
             {error && (
-              <div className="text-red-600 text-sm text-center">{error}</div>
+              <div className="text-red-600 text-sm text-center bg-red-50 p-2 rounded">{error}</div>
             )}
 
-            <Button 
-              type="submit" 
-              className="w-full bg-blue-600 hover:bg-blue-700"
-              disabled={loading}
-            >
-              {loading ? 'Loading...' : (isLogin ? 'Masuk' : 'Daftar')}
-            </Button>
+            <div className='flex w-full gap-2'>
+              
+              <Button 
+                type="submit" 
+                className="w-full bg-blue-600 hover:bg-blue-700"
+                disabled={loading}
+              >
+                {loading ? 'Loading...' : (isLogin ? 'Masuk' : 'Daftar')}
+              </Button>
+            </div>
 
             <div className="text-center">
               <button
@@ -142,14 +159,15 @@ const LoginRegister = () => {
                 {isLogin ? 'Belum punya akun? Daftar' : 'Sudah punya akun? Masuk'}
               </button>
             </div>
-
+            {/* 
             {isLogin && (
-              <div className="text-xs text-gray-500 mt-4 p-3 bg-blue-50 rounded">
+              <div className="text-md text-gray-500 mt-4 p-3 bg-blue-50 rounded">
                 <strong>Demo Login:</strong><br/>
-                Admin: admin@sibestie.com / admin123<br/>
-                User: email@contoh.com / password123
+                Admin: sbadmin@sibestie.org / sbadmin424<br/>
+                User: johndoe@contoh.com / 12345678<br/>
+                Verifikator: sbverify@sibesti.org / sbverify424
               </div>
-            )}
+            )} */}
           </form>
         </CardContent>
       </Card>

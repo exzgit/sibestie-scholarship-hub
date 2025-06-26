@@ -1,15 +1,8 @@
 import { useEffect, useState } from "react";
 import { Home, Newspaper, Award, Info, Phone, User } from "lucide-react";
-import HomePanel from "../components/user/HomePanel";
-import BeritaPanel from "../components/user/BeritaPanel";
-import BeasiswaPanel from "../components/user/BeasiswaPanel";
-import InformasiPanel from "../components/user/InformasiPanel";
-import KonsultasiPanel from "../components/user/KonsultasiPanel";
-import ProfilePanel from "../components/user/ProfilePanel";
-import LoginRegister from "../components/user/LoginRegister";
 import { useAuth } from "../contexts/AuthContext";
-import VerifikasiPanel from "@/components/user/VerifikasiPanel";
 import { Outlet, useNavigate, useLocation } from "react-router-dom";
+import RoleHeader from "../components/ui/role-header";
 
 const UserPage = () => {
   const [activePanel, setActivePanel] = useState("home");
@@ -48,30 +41,6 @@ const UserPage = () => {
     localStorage.setItem("userActivePanel", activePanel);
   }, [activePanel]);
 
-  const renderPanel = () => {
-    switch (activePanel) {
-      case "home":
-        return <HomePanel />;
-      case "berita":
-        return <BeritaPanel />;
-      case "beasiswa":
-        return <BeasiswaPanel />;
-      case "informasi":
-        return <InformasiPanel />;
-      case "konsultasi":
-        return <KonsultasiPanel />;
-      case "profile":
-        if (!isAuthenticated) {
-          return <LoginRegister />;
-        }
-        return <ProfilePanel onVerificationClick={() => setActivePanel("verifikasi")} />;
-      case "verifikasi":
-        return <VerifikasiPanel />;
-      default:
-        return <HomePanel />;
-    }
-  };
-
   const navigationItems = [
     { id: "home", icon: Home, label: "Home", path: "/user"},
     { id: "berita", icon: Newspaper, label: "Berita", path: "/user/berita" },
@@ -88,6 +57,9 @@ const UserPage = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 pb-20">
+      {/* Role Header */}
+      <RoleHeader />
+      
       {/* Main Content */}
       <div className="min-h-screen overflow-y-auto">
         <Outlet />

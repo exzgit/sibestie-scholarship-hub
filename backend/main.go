@@ -46,6 +46,7 @@ func main() {
 		&models.UserVerification{},
 		&models.VerificationStack{},
 		&models.Pendaftar{},
+		&models.Verifikasi{},
 	)
 
 	r := gin.Default()
@@ -85,4 +86,18 @@ func setupRoutes(r *gin.Engine) {
 
 	r.GET("/api/scholarships", controllers.GetScholarships)
 	r.POST("/api/scholarships", controllers.CreateScholarship)
+
+	// User endpoints
+	r.GET("/api/getuser", controllers.GetUsers)
+	r.GET("/api/verification-users", controllers.GetVerificationUsers)
+
+	// Verifikasi endpoints
+	r.POST("/api/verifikasi", controllers.SubmitVerifikasi)
+	r.POST("/api/verifikasi/test", controllers.TestConnection)
+	r.GET("/api/verifikasi/pending", controllers.ListPendingVerifikasi)
+	r.GET("/api/verifikasi/:id", controllers.GetVerifikasiDetail)
+	r.POST("/api/verifikasi/:id/approve", controllers.ApproveVerifikasi)
+	r.POST("/api/verifikasi/:id/reject", controllers.RejectVerifikasi)
+	r.GET("/api/verifikasi/status/:user_id", controllers.GetVerificationStatus)
+	r.GET("/api/verifikasi/stats", controllers.GetVerificationStats)
 }

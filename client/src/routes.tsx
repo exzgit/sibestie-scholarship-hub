@@ -21,8 +21,10 @@ import { AdminAccounting } from "./components/admin/AdminAccounting";
 import { AdminStatistic } from "./components/admin/AdminStatistic";
 import { AdminNews } from "./components/admin/AdminNews";
 import { AdminProfile } from "./components/admin/AdminProfile";
+import VerifikatorUserList from "./components/verifikator/VerifikatorUserList";
+import VerifikatorUserDetail from "./components/verifikator/VerifikatorUserDetail";
 
-// Protected Route Component
+// Protected Route Component for specific roles
 const ProtectedRoute = ({ children, allowedRoles }: { children: React.ReactNode, allowedRoles: string[] }) => {
   const { isAuthenticated, isRole } = useAuth();
   
@@ -31,13 +33,16 @@ const ProtectedRoute = ({ children, allowedRoles }: { children: React.ReactNode,
   }
   
   if (!allowedRoles.includes(isRole)) {
-    // Redirect based on role
+    // Redirect based on role to their default page
     if (isRole === "admin") {
       return <Navigate to="/admin" replace />;
     } else if (isRole === "verifikator") {
       return <Navigate to="/verifikator" replace />;
+    } else if (isRole === "user") {
+      return <Navigate to="/user" replace />;
     } else {
-      return <Navigate to="/" replace />;
+      // Fallback for unknown roles
+      return <Navigate to="/auth/login" replace />;
     }
   }
   
@@ -52,13 +57,37 @@ const RoleRedirect = () => {
     return <Navigate to="/auth/login" replace />;
   }
   
+  // Redirect based on role to their default page
   if (isRole === "admin") {
     return <Navigate to="/admin" replace />;
   } else if (isRole === "verifikator") {
     return <Navigate to="/verifikator" replace />;
-  } else {
+  } else if (isRole === "user") {
     return <Navigate to="/user" replace />;
+  } else {
+    // Fallback for unknown roles
+    return <Navigate to="/auth/login" replace />;
   }
+};
+
+// Component to handle unauthorized access
+const UnauthorizedAccess = () => {
+  const { isRole } = useAuth();
+  
+  return (
+    <div className="min-h-screen flex items-center justify-center bg-gray-100">
+      <div className="text-center">
+        <h1 className="text-4xl font-bold mb-4 text-red-600">403</h1>
+        <p className="text-xl text-gray-600 mb-4">Akses Ditolak</p>
+        <p className="text-gray-500 mb-4">
+          Maaf, Anda tidak memiliki izin untuk mengakses halaman ini.
+        </p>
+        <p className="text-sm text-gray-400">
+          Role Anda: <span className="font-medium">{isRole || 'Tidak diketahui'}</span>
+        </p>
+      </div>
+    </div>
+  );
 };
 
 const AppRoutes = () => {
@@ -67,8 +96,15 @@ const AppRoutes = () => {
       {/* Root redirect based on role */}
       <Route path="/" element={<RoleRedirect />} />
       
-      {/* User routes */}
-      <Route path="/user" element={<UserPage />}>
+      {/* User routes - Only accessible by user role */}
+      <Route 
+        path="/user" 
+        element={
+          <ProtectedRoute allowedRoles={["user"]}>
+            <UserPage />
+          </ProtectedRoute>
+        }
+      >
         <Route index element={<HomePanel />} />
         <Route path="profile" element={<ProfilePanel />} />
         <Route path="beasiswa" element={<BeasiswaPanel />} />
@@ -76,10 +112,9 @@ const AppRoutes = () => {
         <Route path="informasi" element={<InformasiPanel />} />
         <Route path="konsultasi" element={<KonsultasiPanel />} />
         <Route path="verifikasi" element={<VerifikasiPanel />} />
-        <Route path="auth/login" element={<LoginRegister />} />
       </Route>
       
-      {/* Admin routes */}
+      {/* Admin routes - Only accessible by admin role */}
       <Route 
         path="/admin" 
         element={
@@ -97,7 +132,7 @@ const AppRoutes = () => {
         <Route path="profile" element={<AdminProfile />} />
       </Route>
 
-      {/* Verifikator routes */}
+      {/* Verifikator routes - Only accessible by verifikator role */}
       <Route 
         path="/verifikator" 
         element={
@@ -106,19 +141,17 @@ const AppRoutes = () => {
           </ProtectedRoute>
         }
       >
-        <Route index element={<AdminDashboard />} />
-        <Route path="datauser" element={<TableViewDataUser />} />
-        <Route path="beasiswa" element={<AdminScholarship />} />
-        <Route path="laporan" element={<AdminStatistic />} />
-        <Route path="donasi" element={<AdminAccounting />} />
-        <Route path="berita" element={<AdminNews />} />
-        <Route path="profile" element={<AdminProfile />} />
+        <Route path="datauser" element={<VerifikatorUserList />} />
+        <Route path="datauser/:id" element={<VerifikatorUserDetail />} />
       </Route>
 
-      {/* Auth routes */}
+      {/* Auth routes - Accessible by all */}
       <Route path="/auth/login" element={<LoginRegister />} />
       
-      {/* Catch all */}
+      {/* Unauthorized access page */}
+      <Route path="/unauthorized" element={<UnauthorizedAccess />} />
+      
+      {/* Catch all - Show 404 for unknown routes */}
       <Route path="*" element={<NotFound />} />
     </Routes>
   );
