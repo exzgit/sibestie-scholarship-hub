@@ -56,6 +56,9 @@ interface VerificationData {
   verified_at?: string;
   created_at: string;
   updated_at: string;
+  personal_score?: number;
+  academic_score?: number;
+  family_score?: number;
 }
 
 const VerifikatorUserDetail = () => {
@@ -68,7 +71,6 @@ const VerifikatorUserDetail = () => {
   const [activeTab, setActiveTab] = useState("personal");
   const [saudara, setSaudara] = useState<Array<{ nama: string; status: string }>>([]);
   const [feedbackMessage, setFeedbackMessage] = useState("");
-  const [dataCompletenessRank, setDataCompletenessRank] = useState(5);
   const [showFeedbackForm, setShowFeedbackForm] = useState(false);
 
   useEffect(() => {
@@ -108,30 +110,24 @@ const VerifikatorUserDetail = () => {
       setError("Pesan feedback wajib diisi");
       return;
     }
-    
     setIsSubmitting(true);
     try {
       await axios.post(`http://127.0.0.1:8081/api/verifikasi/${id}/approve`, {
-        message: feedbackMessage,
-        data_completeness_rank: dataCompletenessRank
+        message: feedbackMessage
       }, {
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('token')}`
         }
       });
-      
       setUserData({
         ...userData,
         status: "approved",
         verifikator_message: feedbackMessage,
-        data_completeness_rank: dataCompletenessRank,
         verified_at: new Date().toISOString()
       });
-      
       setError("");
       setShowFeedbackForm(false);
       setFeedbackMessage("");
-      setDataCompletenessRank(5);
     } catch (err) {
       console.error("Failed to approve verification:", err);
       setError("Gagal menyetujui verifikasi");
@@ -145,30 +141,24 @@ const VerifikatorUserDetail = () => {
       setError("Pesan feedback wajib diisi");
       return;
     }
-    
     setIsSubmitting(true);
     try {
       await axios.post(`http://127.0.0.1:8081/api/verifikasi/${id}/reject`, {
-        message: feedbackMessage,
-        data_completeness_rank: dataCompletenessRank
+        message: feedbackMessage
       }, {
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('token')}`
         }
       });
-      
       setUserData({
         ...userData,
         status: "rejected",
         verifikator_message: feedbackMessage,
-        data_completeness_rank: dataCompletenessRank,
         verified_at: new Date().toISOString()
       });
-      
       setError("");
       setShowFeedbackForm(false);
       setFeedbackMessage("");
-      setDataCompletenessRank(5);
     } catch (err) {
       console.error("Failed to reject verification:", err);
       setError("Gagal menolak verifikasi");
@@ -258,12 +248,28 @@ const VerifikatorUserDetail = () => {
                    userData.status === 'approved' ? 'Terverifikasi' : 'Ditolak'}
                 </span>
               </div>
-              
+              {/* Breakdown pembobotan selalu tampil */}
+              {(userData.personal_score !== undefined || userData.academic_score !== undefined || userData.family_score !== undefined) && (
+                <div className="mt-2">
+                  <div className="text-xs font-semibold text-gray-700 mb-1">Rincian Pembobotan Kelengkapan Data:</div>
+                  <ul className="text-xs text-gray-600 space-y-1">
+                    {userData.personal_score !== undefined && (
+                      <li>Personal: {userData.personal_score.toFixed(1)}%</li>
+                    )}
+                    {userData.academic_score !== undefined && (
+                      <li>Akademik: {userData.academic_score.toFixed(1)}%</li>
+                    )}
+                    {userData.family_score !== undefined && (
+                      <li>Ekonomi Keluarga: {userData.family_score.toFixed(1)}%</li>
+                    )}
+                  </ul>
+                </div>
+              )}
               {userData.verifikator_message && (
                 <div className="mt-3 bg-blue-50 border border-blue-200 rounded-lg p-4">
                   <h3 className="font-semibold text-blue-900 mb-2">Feedback Verifikator</h3>
                   <p className="text-blue-800 mb-3">{userData.verifikator_message}</p>
-                  {userData.data_completeness_rank && (
+                  {/* {userData.data_completeness_rank && (
                     <div className="flex items-center mb-3">
                       <span className="text-sm text-blue-700 mr-2">Rating Kelengkapan Data:</span>
                       <div className="flex">
@@ -280,7 +286,7 @@ const VerifikatorUserDetail = () => {
                         {userData.data_completeness_rank}/10
                       </span>
                     </div>
-                  )}
+                  )} */}
                   {userData.verified_at && (
                     <p className="text-xs text-blue-600">
                       Diverifikasi pada: {new Date(userData.verified_at).toLocaleString('id-ID')}
@@ -332,7 +338,7 @@ const VerifikatorUserDetail = () => {
           <CardHeader>
             <CardTitle className="text-lg">Feedback Verifikator</CardTitle>
             <CardDescription>
-              Berikan pesan dan rating kelengkapan data untuk user ini
+              Berikan pesan feedback untuk user ini
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
@@ -347,28 +353,6 @@ const VerifikatorUserDetail = () => {
                 rows={4}
               />
             </div>
-            
-            <div>
-              <Label htmlFor="data-rank">Rating Kelengkapan Data *</Label>
-              <div className="flex items-center mt-2 space-x-4">
-                <Slider
-                  value={[dataCompletenessRank]}
-                  onValueChange={(value) => setDataCompletenessRank(value[0])}
-                  max={10}
-                  min={1}
-                  step={1}
-                  className="flex-1"
-                />
-                <span className="text-sm font-medium min-w-[3rem]">
-                  {dataCompletenessRank}/10
-                </span>
-              </div>
-              <div className="flex justify-between text-xs text-gray-500 mt-1">
-                <span>Sangat Kurang</span>
-                <span>Sangat Lengkap</span>
-              </div>
-            </div>
-            
             <div className="flex gap-2 pt-4">
               <Button 
                 onClick={handleApprove} 
@@ -390,7 +374,6 @@ const VerifikatorUserDetail = () => {
                 onClick={() => {
                   setShowFeedbackForm(false);
                   setFeedbackMessage("");
-                  setDataCompletenessRank(5);
                 }}
                 variant="outline"
               >

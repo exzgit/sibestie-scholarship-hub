@@ -100,7 +100,7 @@ type VerificationStats struct {
 // VerificationFeedbackRequest represents the feedback data from verifikator
 type VerificationFeedbackRequest struct {
 	Message              string `json:"message" binding:"required"`
-	DataCompletenessRank int    `json:"data_completeness_rank" binding:"required,min=1,max=10"`
+	DataCompletenessRank int    `json:"data_completeness_rank"`
 }
 
 // CalculateDataCompletenessRank calculates the completeness rank based on weighted criteria
@@ -143,79 +143,95 @@ func calculatePersonalDataScore(data VerifikasiData) float64 {
 		data.NomorTelepon != "",
 		data.Email != "",
 	}
-
 	filledCount := 0
 	for _, filled := range personalFields {
 		if filled {
 			filledCount++
 		}
 	}
-
-	// Each field gets equal weight (100% / number of fields)
-	fieldWeight := 100.0 / float64(len(personalFields))
-	return float64(filledCount) * fieldWeight / 100.0
+	fieldWeight := 1.0 / float64(len(personalFields))
+	return float64(filledCount) * fieldWeight
 }
 
 // calculateAcademicDataScore calculates score for academic data (40% weight)
 func calculateAcademicDataScore(data VerifikasiData) float64 {
-	academicFields := []struct {
-		value  string
-		weight float64
-	}{
-		{data.AsalSekolah, 20.0},    // 20% of academic score
-		{data.TahunLulus, 20.0},     // 20% of academic score
-		{data.NilaiSemester1, 30.0}, // 30% of academic score
-		{data.NilaiSemester2, 30.0}, // 30% of academic score
-	}
+	// 5 field: asal_sekolah, tahun_lulus, nilai_semester_1, nilai_semester_2, foto_ijazah
+	fieldCount := 5.0
+	fieldWeight := 1.0 / fieldCount
+	filled := 0.0
 
-	totalScore := 0.0
-	for _, field := range academicFields {
-		if field.value != "" {
-			// For non-numeric fields, give full score
-			if field.value == data.AsalSekolah || field.value == data.TahunLulus {
-				totalScore += field.weight
-			} else {
-				// For numeric fields (nilai), apply scoring based on value
-				if nilai, err := strconv.ParseFloat(field.value, 64); err == nil {
-					if nilai >= 8.0 {
-						totalScore += field.weight // Full score for 8-10
-					} else if nilai >= 6.0 {
-						totalScore += field.weight * 0.5 // 50% score for 6-8
-					}
-					// 0% score for < 6.0
-				}
+	if data.AsalSekolah != "" {
+		filled += fieldWeight
+	}
+	if data.TahunLulus != "" {
+		filled += fieldWeight
+	}
+	// Nilai semester 1
+	if data.NilaiSemester1 != "" {
+		if nilai, err := strconv.ParseFloat(data.NilaiSemester1, 64); err == nil {
+			if nilai >= 8.0 {
+				filled += fieldWeight
+			} else if nilai >= 6.0 {
+				filled += fieldWeight * 0.5
 			}
 		}
 	}
-
-	return totalScore / 100.0
+	// Nilai semester 2
+	if data.NilaiSemester2 != "" {
+		if nilai, err := strconv.ParseFloat(data.NilaiSemester2, 64); err == nil {
+			if nilai >= 8.0 {
+				filled += fieldWeight
+			} else if nilai >= 6.0 {
+				filled += fieldWeight * 0.5
+			}
+		}
+	}
+	if data.FotoIjazah != "" {
+		filled += fieldWeight
+	}
+	return filled
 }
 
 // calculateFamilyDataScore calculates score for family economic data (50% weight)
 func calculateFamilyDataScore(data VerifikasiData) float64 {
-	familyFields := []struct {
-		income int
-		weight float64
-	}{
-		{data.PendapatanIbu, 25.0},  // 25% of family score
-		{data.PendapatanAyah, 25.0}, // 25% of family score
+	// 5 field: pekerjaan_ibu, pendapatan_ibu, pekerjaan_ayah, pendapatan_ayah, alamat_keluarga
+	fieldCount := 5.0
+	fieldWeight := 1.0 / fieldCount
+	filled := 0.0
+
+	if data.PekerjaanIbu != "" {
+		filled += fieldWeight
 	}
-
-	totalScore := 0.0
-	for _, field := range familyFields {
-		incomeInMillions := float64(field.income) / 1000000.0
-
-		if incomeInMillions < 1.0 {
-			totalScore += field.weight // Full score for < 1jt
-		} else if incomeInMillions <= 2.0 {
-			totalScore += field.weight * 0.6 // 60% score for 1-2jt
-		} else if incomeInMillions <= 5.0 {
-			totalScore += field.weight * 0.3 // 30% score for 3-5jt
+	// Pendapatan Ibu
+	if data.PendapatanIbu > 0 {
+		income := float64(data.PendapatanIbu)
+		if income < 1000000 {
+			filled += fieldWeight
+		} else if income >= 1000000 && income <= 2000000 {
+			filled += fieldWeight * 0.6
+		} else if income > 2000000 && income <= 5000000 {
+			filled += fieldWeight * 0.3
 		}
-		// 0% score for > 5jt
+		// >5jt tidak dapat skor
 	}
-
-	return totalScore / 100.0
+	if data.PekerjaanAyah != "" {
+		filled += fieldWeight
+	}
+	// Pendapatan Ayah
+	if data.PendapatanAyah > 0 {
+		income := float64(data.PendapatanAyah)
+		if income < 1000000 {
+			filled += fieldWeight
+		} else if income >= 1000000 && income <= 2000000 {
+			filled += fieldWeight * 0.6
+		} else if income > 2000000 && income <= 5000000 {
+			filled += fieldWeight * 0.3
+		}
+	}
+	if data.AlamatKeluarga != "" {
+		filled += fieldWeight
+	}
+	return filled
 }
 
 // POST /api/verifikasi
@@ -441,7 +457,61 @@ func GetVerifikasiDetail(c *gin.Context) {
 		data.VerifiedAt = &verifiedAtStr
 	}
 
-	c.JSON(http.StatusOK, data)
+	// Hitung ulang skor pembobotan untuk detail breakdown
+	personalScore := calculatePersonalDataScore(data) * 100.0
+	academicScore := calculateAcademicDataScore(data) * 100.0
+	familyScore := calculateFamilyDataScore(data) * 100.0
+
+	c.JSON(http.StatusOK, gin.H{
+		"id": data.ID,
+		"user_id": data.UserID,
+		"nik": data.NIK,
+		"nisn": data.NISN,
+		"nama_lengkap": data.NamaLengkap,
+		"tanggal_lahir": data.TanggalLahir,
+		"tempat_lahir": data.TempatLahir,
+		"alamat": data.Alamat,
+		"foto_ktp": data.FotoKTP,
+		"nomor_telepon": data.NomorTelepon,
+		"email": data.Email,
+		"instagram": data.Instagram,
+		"facebook": data.Facebook,
+		"tiktok": data.Tiktok,
+		"website": data.Website,
+		"linkedin": data.LinkedIn,
+		"twitter": data.Twitter,
+		"youtube": data.Youtube,
+		"whatsapp": data.Whatsapp,
+		"telegram": data.Telegram,
+		"other": data.Other,
+		"nama_ibu": data.NamaIbu,
+		"pekerjaan_ibu": data.PekerjaanIbu,
+		"pendapatan_ibu": data.PendapatanIbu,
+		"nama_ayah": data.NamaAyah,
+		"pekerjaan_ayah": data.PekerjaanAyah,
+		"pendapatan_ayah": data.PendapatanAyah,
+		"alamat_keluarga": data.AlamatKeluarga,
+		"foto_kk": data.FotoKK,
+		"saudara": data.Saudara,
+		"asal_sekolah": data.AsalSekolah,
+		"tahun_lulus": data.TahunLulus,
+		"nilai_semester_1": data.NilaiSemester1,
+		"nilai_semester_2": data.NilaiSemester2,
+		"foto_ijazah": data.FotoIjazah,
+		"foto_skl": data.FotoSKL,
+		"foto_sertifikat": data.FotoSertifikat,
+		"status": data.Status,
+		"verifikator_message": data.VerifikatorMessage,
+		"data_completeness_rank": data.DataCompletenessRank,
+		"verifikator_id": data.VerifikatorID,
+		"verified_at": data.VerifiedAt,
+		"created_at": data.CreatedAt,
+		"updated_at": data.UpdatedAt,
+		// Tambahan breakdown pembobotan
+		"personal_score": personalScore,
+		"academic_score": academicScore,
+		"family_score": familyScore,
+	})
 }
 
 // POST /api/verifikasi/:id/approve
