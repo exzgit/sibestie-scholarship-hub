@@ -93,12 +93,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const register = async (data: { name: string; email: string; password: string }) => {
-    try {
       await axios.post('http://127.0.0.1:8081/register', data);
       return true;
-    } catch (err) {
-      throw err; 
-    }
   };
 
   const logout = () => {

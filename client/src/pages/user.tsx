@@ -15,8 +15,8 @@ const UserPage = () => {
     const path = location.pathname;
     if (path === "/user" || path === "/user/") {
       setActivePanel("home");
-    } else if (path === "/user/berita") {
-      setActivePanel("berita");
+    // } else if (path === "/user/berita") {
+      // setActivePanel("berita");
     } else if (path === "/user/beasiswa") {
       setActivePanel("beasiswa");
     } else if (path === "/user/informasi") {
@@ -43,14 +43,14 @@ const UserPage = () => {
 
   const navigationItems = [
     { id: "home", icon: Home, label: "Home", path: "/user"},
-    { id: "berita", icon: Newspaper, label: "Berita", path: "/user/berita" },
+    // { id: "berita", icon: Newspaper, label: "Berita", path: "/user/berita" },
     { id: "beasiswa", icon: Award, label: "Beasiswa", path: "/user/beasiswa" },
     { id: "informasi", icon: Info, label: "Info", path: "/user/informasi" },
     { id: "konsultasi", icon: Phone, label: "Konsultasi", path: "/user/konsultasi" },
     { id: "profile", icon: User, label: "Profile", path: isAuthenticated ? "/user/profile" : "/auth/login" },
   ];
 
-  const handleNavigation = (item: any) => {
+  const handleNavigation = (item) => {
     setActivePanel(item.id);
     navigate(item.path);
   };

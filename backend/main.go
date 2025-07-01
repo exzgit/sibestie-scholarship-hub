@@ -82,13 +82,14 @@ func setupRoutes(r *gin.Engine) {
 	{
 		authGroup.POST("/register", controllers.RegisterHandler)
 		authGroup.POST("/login", controllers.LoginHandler)
-	}
+	}  
 
 	r.GET("/api/scholarships", controllers.GetScholarships)
 	r.POST("/api/scholarships", controllers.CreateScholarship)
 
 	// User endpoints
-	r.GET("/api/getuser", controllers.GetUsers)
+	r.GET("/api/users", controllers.GetUsers)   
+	r.DELETE("/api/users/:id", controllers.DeleteUser)
 	r.GET("/api/verification-users", controllers.GetVerificationUsers)
 
 	// Verifikasi endpoints
@@ -100,4 +101,5 @@ func setupRoutes(r *gin.Engine) {
 	r.POST("/api/verifikasi/:id/reject", controllers.RejectVerifikasi)
 	r.GET("/api/verifikasi/status/:user_id", controllers.GetVerificationStatus)
 	r.GET("/api/verifikasi/stats", controllers.GetVerificationStats)
+	r.GET("/api/verifikasi/monthly-stats", controllers.GetMonthlyRegistrationStats)
 }

@@ -3,6 +3,7 @@ package controllers
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 	"log"
 	"net/http"
 	"strconv"
@@ -734,4 +735,59 @@ func GetVerificationStats(c *gin.Context) {
 	stats.RejectedUsers = int(rejectedCount)
 
 	c.JSON(http.StatusOK, stats)
+}
+
+// GetMonthlyRegistrationStats retrieves monthly statistics about user registrations
+func GetMonthlyRegistrationStats(c *gin.Context) {
+	// Calculate the start date (beginning of current year)
+	currentYear := time.Now().Year()
+	startDate := time.Date(currentYear, 1, 1, 0, 0, 0, 0, time.Local)
+	
+	// Query to get monthly registration counts
+	var results []struct {
+		Month string `json:"month"`
+		Count int    `json:"count"`
+	}
+	
+	// SQL query that groups registrations by month
+	query := `
+		SELECT 
+			strftime('%m', created_at) as month,
+			COUNT(*) as count
+		FROM verifikasis
+		WHERE created_at >= ?
+		GROUP BY month
+		ORDER BY month
+	`
+	
+	if err := config.DB.Raw(query, startDate).Scan(&results).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to get monthly registration stats"})
+		return
+	}
+	
+	// Create a map for all months (1-12) with zero counts
+	monthlyStats := make(map[string]int)
+	for i := 1; i <= 12; i++ {
+		month := fmt.Sprintf("%02d", i)
+		monthlyStats[month] = 0
+	}
+	
+	// Fill in actual counts from results
+	for _, result := range results {
+		monthlyStats[result.Month] = result.Count
+	}
+	
+	// Create the final response array in month order
+	var response []map[string]interface{}
+	for i := 1; i <= 12; i++ {
+		month := fmt.Sprintf("%02d", i)
+		monthName := time.Month(i).String()
+		response = append(response, map[string]interface{}{
+			"month":      month,
+			"month_name": monthName,
+			"count":      monthlyStats[month],
+		})
+	}
+	
+	c.JSON(http.StatusOK, response)
 }

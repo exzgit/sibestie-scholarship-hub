@@ -56,7 +56,7 @@ const VerifikatorDashboard = () => {
         if (Array.isArray(recentResponse.data)) {
           // Get the 5 most recent verifications
           const recent = recentResponse.data
-            .sort((a: any, b: any) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
+            .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
             .slice(0, 5);
           setRecentVerifications(recent);
         }
@@ -154,7 +154,7 @@ const VerifikatorDashboard = () => {
     <div className="p-6 space-y-6">
       {/* Header */}
       <div className="flex justify-between items-center">
-        <div>
+        <div className="pt-16">
           <h1 className="text-3xl font-bold text-gray-900">Dashboard Verifikator</h1>
           <p className="text-gray-600 mt-1">Selamat datang! Kelola verifikasi beasiswa dengan mudah.</p>
         </div>

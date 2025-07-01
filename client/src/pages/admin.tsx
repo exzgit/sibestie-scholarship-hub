@@ -35,8 +35,8 @@ const AdminPage = () => {
       setActivePanel("laporan");
     } else if (path === "/admin/donasi") {
       setActivePanel("donasi");
-    } else if (path === "/admin/berita") {
-      setActivePanel("berita");
+    // } else if (path === "/admin/berita") {
+      // setActivePanel("berita");
     } else if (path === "/admin/profile") {
       setActivePanel("profil");
     }
@@ -59,10 +59,10 @@ const AdminPage = () => {
     { key: "beasiswa", icon: <School size={24} />, path: "/admin/beasiswa"},
     { key: "laporan", icon: <BarChart size={24} />, path: "/admin/laporan" },
     { key: "donasi", icon: <LucidePiggyBank size={24} />, path: "/admin/donasi"},
-    { key: "berita", icon: <Newspaper size={24} />, path: "/admin/berita"},
+    // { key: "berita", icon: <Newspaper size={24} />, path: "/admin/berita"},
   ];
 
-  const handleNavigation = (item: any) => {
+  const handleNavigation = (item) => {
     setActivePanel(item.key);
     navigate(item.path);
   };

@@ -1,5 +1,6 @@
 "use client";
 
+import React from "react";
 import { useState, useEffect } from "react";
 import {
   Card,
@@ -325,7 +326,7 @@ export default function VerifikasiPanel() {
         });
         
         console.log("Koneksi ke server berhasil, melanjutkan dengan pengiriman data lengkap...");
-      } catch (testError: any) {
+      } catch (testError) {
         console.error("Test connection failed:", testError);
         
         // Jika error karena endpoint test tidak ada, lanjutkan dengan pengiriman normal
@@ -479,7 +480,7 @@ export default function VerifikasiPanel() {
         setFotoIjazah(null);
         setFotoSkl(null);
         setFotoSertifikat(null);
-      } catch (apiError: any) {
+      } catch (apiError) {
         console.error("API request failed:", apiError);
         
         // Jika gagal dengan URL utama, coba dengan URL alternatif
@@ -537,7 +538,7 @@ export default function VerifikasiPanel() {
             setFotoSkl(null);
             setFotoSertifikat(null);
             return;
-          } catch (backupError: any) {
+          } catch (backupError) {
             console.error("Backup API request failed:", backupError);
             setError("Tidak dapat terhubung ke server pada kedua URL. Pastikan server backend berjalan.");
           }
@@ -558,7 +559,7 @@ export default function VerifikasiPanel() {
         }
       }
       
-    } catch (error: any) {
+    } catch (error) {
       console.error("Error submitting verification data:", error);
       setError(error.message || "Gagal mengirim data verifikasi. Silakan coba lagi.");
       toast({

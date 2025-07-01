@@ -1,9 +1,23 @@
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
-import { CheckCircle } from "lucide-react";
+import { CheckCircle, RefreshCcw } from "lucide-react";
 import axios from "axios";
 
+// Raw API response data interface
+interface ApiVerificationUser {
+  id: number;
+  user_id: number;
+  nama_lengkap?: string;
+  email?: string;
+  status?: string;
+  created_at?: string;
+  // Other possible fields that might be in the API response
+  data?: unknown;
+  message?: string;
+}
+
+// Normalized user data for the component
 interface VerificationUser {
   id: number;
   user_id: number;
@@ -18,34 +32,82 @@ const VerifikatorUserList = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState("");
 
-  useEffect(() => {
-    const fetchUsers = async () => {
-      try {
-        setIsLoading(true);
-        setError("");
-        const response = await axios.get("http://localhost:8081/api/verification-users");
-        
-        // Ensure response.data is an array
-        if (Array.isArray(response.data)) {
-          setUsers(response.data);
-        } else {
-          console.error("Response is not an array:", response.data);
-          setUsers([]);
-          setError("Data format tidak valid");
-        }
-      } catch (error) {
-        console.error("Error fetching users:", error);
+  const fetchUsers = async () => {
+    try {
+      setIsLoading(true);
+      setError("");
+      const response = await axios.get("http://localhost:8081/api/verification-users");
+      
+      // Handle null response specifically
+      if (response.data === null) {
+        // If the server returns null, treat it as an empty array
         setUsers([]);
-        setError("Gagal memuat data verifikasi");
-      } finally {
-        setIsLoading(false);
+        return;
       }
-    };
-    
+      
+      // Properly handle different response formats
+      if (Array.isArray(response.data)) {
+        // Normalize data to ensure it matches our interface
+        const normalizedData = response.data.map((user: ApiVerificationUser) => ({
+          id: user.id || 0,
+          user_id: user.user_id || 0,
+          nama_lengkap: user.nama_lengkap || 'Tidak ada nama',
+          email: user.email || 'Tidak ada email',
+          status: (user.status || 'pending').toLowerCase(),
+          created_at: user.created_at || new Date().toISOString()
+        }));
+        
+        setUsers(normalizedData);
+      } else if (typeof response.data === 'object' && response.data !== null) {
+        // Handle case where response is an object (possibly with data property)
+        const dataArray = response.data.data || [];
+        if (Array.isArray(dataArray)) {
+          const normalizedData = dataArray.map((user: ApiVerificationUser) => ({
+            id: user.id || 0,
+            user_id: user.user_id || 0,
+            nama_lengkap: user.nama_lengkap || 'Tidak ada nama',
+            email: user.email || 'Tidak ada email',
+            status: (user.status || 'pending').toLowerCase(),
+            created_at: user.created_at || new Date().toISOString()
+          }));
+          setUsers(normalizedData);
+        } else {
+          console.error("Response data is not in expected format:", response.data);
+          setUsers([]);
+          setError("Data format tidak valid: respon tidak berisi array");
+        }
+      } else {
+        console.error("Response is not valid:", response.data);
+        setUsers([]);
+        setError("Data format tidak valid: respon bukan array atau objek");
+      }
+    } catch (error) {
+      console.error("Error fetching users:", error);
+      setUsers([]);
+      setError("Gagal memuat data verifikasi. Server mungkin tidak merespon.");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+  
+  useEffect(() => {
     fetchUsers();
   }, []);
 
   const navigate = useNavigate();
+
+  const formatStatus = (status: string) => {
+    switch(status.toLowerCase()) {
+      case 'pending':
+        return 'Menunggu';
+      case 'approved':
+        return 'Disetujui';
+      case 'rejected':
+        return 'Ditolak';
+      default:
+        return 'Tidak diketahui';
+    }
+  };
 
   if (isLoading) {
     return (
@@ -66,9 +128,10 @@ const VerifikatorUserList = () => {
         <div className="text-center py-8">
           <p className="text-red-600">{error}</p>
           <Button 
-            onClick={() => window.location.reload()} 
-            className="mt-4 bg-blue-600 hover:bg-blue-700"
+            onClick={() => fetchUsers()} 
+            className="mt-4 bg-blue-600 hover:bg-blue-700 flex items-center gap-2"
           >
+            <RefreshCcw size={16} />
             Coba Lagi
           </Button>
         </div>
@@ -78,7 +141,18 @@ const VerifikatorUserList = () => {
 
   return (
     <div className="p-6">
-      <h1 className="text-2xl font-bold mb-6 text-blue-700">Daftar User Meminta Verifikasi</h1>
+      <div className="flex justify-between items-center mb-6">
+        <h1 className="text-2xl font-bold text-blue-700">Daftar User Meminta Verifikasi</h1>
+        <Button 
+          onClick={fetchUsers} 
+          variant="outline" 
+          className="flex items-center gap-2 border-blue-200"
+        >
+          <RefreshCcw size={16} />
+          Refresh Data
+        </Button>
+      </div>
+      
       <div className="overflow-x-auto rounded-xl shadow-sm">
         <table className="min-w-full divide-y divide-zinc-200">
           <thead className="bg-zinc-100">
@@ -110,7 +184,7 @@ const VerifikatorUserList = () => {
                     user.status === 'rejected' ? 'bg-red-100 text-red-700' :
                     'bg-gray-100 text-gray-700'
                   }`}>
-                    {user.status}
+                    {formatStatus(user.status)}
                   </span>
                 </td>
                 <td className="px-6 py-4 text-right">
