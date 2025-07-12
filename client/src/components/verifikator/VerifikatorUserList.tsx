@@ -17,12 +17,14 @@ const VerifikatorUserList = () => {
   const [users, setUsers] = useState<VerificationUser[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState("");
+  const [msg, setMessage] = useState("");
 
   useEffect(() => {
     const fetchUsers = async () => {
       try {
         setIsLoading(true);
         setError("");
+        setMessage("");
         const response = await axios.get("http://localhost:8081/api/verification-users");
         
         // Ensure response.data is an array
@@ -31,7 +33,7 @@ const VerifikatorUserList = () => {
         } else {
           console.error("Response is not an array:", response.data);
           setUsers([]);
-          setError("Data format tidak valid");
+          setMessage("Tidak ada data yang ditemukan");
         }
       } catch (error) {
         console.error("Error fetching users:", error);
@@ -110,11 +112,13 @@ const VerifikatorUserList = () => {
                     user.status === 'rejected' ? 'bg-red-100 text-red-700' :
                     'bg-gray-100 text-gray-700'
                   }`}>
-                    {user.status}
+                    {user.status == 'approved' ? 'Lolos' : null}
+                    {user.status == 'rejected' ? 'Tidak lolos' : null}
+                    {user.status == 'pending' ? 'Diproses' : null}
                   </span>
                 </td>
                 <td className="px-6 py-4 text-right">
-                  {user.status === 'approved' ? (
+                  {/* {user.status === 'approved' ? (
                     <span className="text-sm text-green-600 font-medium">Terverifikasi</span>
                   ) : (
                     <Button
@@ -124,7 +128,16 @@ const VerifikatorUserList = () => {
                     >
                       Lihat Detail
                     </Button>
-                  )}
+                  )} */}
+
+                  <Button
+                      variant="outline"
+                      className="text-blue-600 border-blue-200 hover:bg-blue-50"
+                      onClick={() => navigate(`/verifikator/datauser/${user.id}`)}
+                    >
+                      Lihat Detail
+                  </Button>
+
                 </td>
               </tr>
             ))}

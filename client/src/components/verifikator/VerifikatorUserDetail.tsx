@@ -72,6 +72,9 @@ const VerifikatorUserDetail = () => {
   const [saudara, setSaudara] = useState<Array<{ nama: string; status: string }>>([]);
   const [feedbackMessage, setFeedbackMessage] = useState("");
   const [showFeedbackForm, setShowFeedbackForm] = useState(false);
+  const [personalMatch, setPersonalMatch] = useState<number>();
+  const [academicMatch, setAcademicMatch] = useState<number>();
+  const [familyMatch, setFamilyMatch] = useState<number>();
 
   useEffect(() => {
     const fetchUserData = async () => {
@@ -110,10 +113,21 @@ const VerifikatorUserDetail = () => {
       setError("Pesan feedback wajib diisi");
       return;
     }
+    if (
+      personalMatch < 0 || personalMatch > 100 ||
+      academicMatch < 0 || academicMatch > 100 ||
+      familyMatch < 0 || familyMatch > 100
+    ) {
+      setError("Nilai persentase kesesuaian harus antara 0-100");
+      return;
+    }
     setIsSubmitting(true);
     try {
       await axios.post(`http://127.0.0.1:8081/api/verifikasi/${id}/approve`, {
-        message: feedbackMessage
+        message: feedbackMessage,
+        personal_match: personalMatch,
+        academic_match: academicMatch,
+        family_match: familyMatch
       }, {
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('token')}`
@@ -123,7 +137,10 @@ const VerifikatorUserDetail = () => {
         ...userData,
         status: "approved",
         verifikator_message: feedbackMessage,
-        verified_at: new Date().toISOString()
+        verified_at: new Date().toISOString(),
+        personal_score: personalMatch,
+        academic_score: academicMatch,
+        family_score: familyMatch
       });
       setError("");
       setShowFeedbackForm(false);
@@ -141,10 +158,21 @@ const VerifikatorUserDetail = () => {
       setError("Pesan feedback wajib diisi");
       return;
     }
+    if (
+      personalMatch < 0 || personalMatch > 100 ||
+      academicMatch < 0 || academicMatch > 100 ||
+      familyMatch < 0 || familyMatch > 100
+    ) {
+      setError("Nilai persentase kesesuaian harus antara 0-100");
+      return;
+    }
     setIsSubmitting(true);
     try {
       await axios.post(`http://127.0.0.1:8081/api/verifikasi/${id}/reject`, {
-        message: feedbackMessage
+        message: feedbackMessage,
+        personal_match: personalMatch,
+        academic_match: academicMatch,
+        family_match: familyMatch
       }, {
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('token')}`
@@ -154,7 +182,10 @@ const VerifikatorUserDetail = () => {
         ...userData,
         status: "rejected",
         verifikator_message: feedbackMessage,
-        verified_at: new Date().toISOString()
+        verified_at: new Date().toISOString(),
+        personal_score: personalMatch,
+        academic_score: academicMatch,
+        family_score: familyMatch
       });
       setError("");
       setShowFeedbackForm(false);
@@ -183,6 +214,36 @@ const VerifikatorUserDetail = () => {
       minimumFractionDigits: 0,
       maximumFractionDigits: 0
     }).format(amount);
+  };
+
+  // Fungsi untuk menghitung persentase nilai akademik
+  const getAcademicScorePercent = () => {
+    const n1 = parseFloat(userData?.nilai_semester_1 || "0");
+    const n2 = parseFloat(userData?.nilai_semester_2 || "0");
+    if (!n1 || !n2) return null;
+    const avg = (n1 + n2) / 2;
+    const percent = Math.min(100, (avg / 85) * 100);
+    return { percent, avg };
+  };
+
+  // Fungsi untuk menghitung persentase akhir akademik (kelengkapan x nilai)
+  const getFinalAcademicScore = () => {
+    const kelengkapan = userData?.academic_score ?? 0; // input verifikator
+    const nilai = getAcademicScorePercent()?.percent ?? 0;
+    return (kelengkapan * nilai) / 100;
+  };
+
+  // Fungsi untuk menghitung persentase gaji keluarga
+  const getFamilySalaryPercent = () => {
+    const total = (userData?.pendapatan_ibu ?? 0) + (userData?.pendapatan_ayah ?? 0);
+    return Math.min(100, (total / 1500000) * 100);
+  };
+
+  // Fungsi untuk menghitung persentase akhir ekonomi keluarga (kelengkapan x gaji)
+  const getFinalFamilyScore = () => {
+    const kelengkapan = userData?.family_score ?? 0; // input verifikator
+    const gaji = getFamilySalaryPercent();
+    return (kelengkapan * gaji) / 100;
   };
 
   if (isLoading) {
@@ -249,44 +310,58 @@ const VerifikatorUserDetail = () => {
                 </span>
               </div>
               {/* Breakdown pembobotan selalu tampil */}
-              {(userData.personal_score !== undefined || userData.academic_score !== undefined || userData.family_score !== undefined) && (
+              {/* {(userData.personal_score !== undefined || userData.academic_score !== undefined || userData.family_score !== undefined) && (
                 <div className="mt-2">
-                  <div className="text-xs font-semibold text-gray-700 mb-1">Rincian Pembobotan Kelengkapan Data:</div>
+                  <div className="text-xs font-semibold text-gray-700 mb-1">Rincian Kesesuaian Data (Input Verifikator):</div>
                   <ul className="text-xs text-gray-600 space-y-1">
                     {userData.personal_score !== undefined && (
                       <li>Personal: {userData.personal_score.toFixed(1)}%</li>
                     )}
                     {userData.academic_score !== undefined && (
-                      <li>Akademik: {userData.academic_score.toFixed(1)}%</li>
+                      <li>Akademik: {getFinalAcademicScore().toFixed(1)}%</li>
                     )}
                     {userData.family_score !== undefined && (
-                      <li>Ekonomi Keluarga: {userData.family_score.toFixed(1)}%</li>
+                      <li>Ekonomi Keluarga: {getFinalFamilyScore().toFixed(1)}%</li>
                     )}
                   </ul>
                 </div>
-              )}
+              )} */}
               {userData.verifikator_message && (
                 <div className="mt-3 bg-blue-50 border border-blue-200 rounded-lg p-4">
                   <h3 className="font-semibold text-blue-900 mb-2">Feedback Verifikator</h3>
                   <p className="text-blue-800 mb-3">{userData.verifikator_message}</p>
-                  {/* {userData.data_completeness_rank && (
+                  {userData.personal_score && (
                     <div className="flex items-center mb-3">
-                      <span className="text-sm text-blue-700 mr-2">Rating Kelengkapan Data:</span>
-                      <div className="flex">
-                        {[...Array(10)].map((_, i) => (
-                          <div
-                            key={i}
-                            className={`w-3 h-3 rounded-full mx-1 ${
-                              i < userData.data_completeness_rank ? 'bg-blue-500' : 'bg-blue-200'
-                            }`}
-                          />
-                        ))}
-                      </div>
+                      <span className="text-sm text-blue-700 mr-2">Bobot Data Personal (Revised):</span>
                       <span className="ml-2 text-sm font-medium text-blue-700">
-                        {userData.data_completeness_rank}/10
+                        {userData.personal_score}%
                       </span>
                     </div>
-                  )} */}
+                  )} 
+                  {userData.academic_score && (
+                    <div className="flex items-center mb-3">
+                      <span className="text-sm text-blue-700 mr-2">Bobot Data Akademi (Revised):</span>
+                      <span className="ml-2 text-sm font-medium text-blue-700">
+                        {userData.academic_score}%
+                      </span>
+                    </div>
+                  )} 
+                  {userData.family_score && (
+                    <div className="flex items-center mb-3">
+                      <span className="text-sm text-blue-700 mr-2">Bobot Data Keluarga (Revised):</span>
+                      <span className="ml-2 text-sm font-medium text-blue-700">
+                        {userData.family_score}%
+                      </span>
+                    </div>
+                  )} 
+                  {(userData.family_score && userData.personal_score && userData.academic_score) && (
+                    <div className="flex items-center mb-3">
+                      <span className="text-sm text-blue-700 mr-2">Total Bobot Kesesuaian Data:</span>
+                      <span className="ml-2 text-sm font-medium text-blue-700">
+                        {userData.family_score + userData.personal_score + userData.academic_score}%
+                      </span>
+                    </div>
+                  )} 
                   {userData.verified_at && (
                     <p className="text-xs text-blue-600">
                       Diverifikasi pada: {new Date(userData.verified_at).toLocaleString('id-ID')}
@@ -342,6 +417,47 @@ const VerifikatorUserDetail = () => {
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div>
+                <Label htmlFor="personal-match">Kesesuaian Data Personal (%) *</Label>
+                <input
+                  id="personal-match"
+                  type="number"
+                  min={0}
+                  max={100}
+                  value={personalMatch}
+                  onChange={e => setPersonalMatch(Number(e.target.value))}
+                  className="mt-1 w-full border rounded px-2 py-1"
+                  required
+                />
+              </div>
+              <div>
+                <Label htmlFor="academic-match">Kesesuaian Data Akademik (%) *</Label>
+                <input
+                  id="academic-match"
+                  type="number"
+                  min={0}
+                  max={100}
+                  value={academicMatch}
+                  onChange={e => setAcademicMatch(Number(e.target.value))}
+                  className="mt-1 w-full border rounded px-2 py-1"
+                  required
+                />
+              </div>
+              <div>
+                <Label htmlFor="family-match">Kesesuaian Data Keluarga (%) *</Label>
+                <input
+                  id="family-match"
+                  type="number"
+                  min={0}
+                  max={100}
+                  value={familyMatch}
+                  onChange={e => setFamilyMatch(Number(e.target.value))}
+                  className="mt-1 w-full border rounded px-2 py-1"
+                  required
+                />
+              </div>
+            </div>
             <div>
               <Label htmlFor="feedback-message">Pesan Feedback *</Label>
               <Textarea
@@ -434,9 +550,11 @@ const VerifikatorUserDetail = () => {
                   <p className="text-base">{userData.email}</p>
                 </div>
               </div>
-              
+              {/* Detail kelengkapan data personal */}
+              <div className="mt-4">
+                <p className="text-sm font-semibold text-gray-700">Kelengkapan Data Personal: <span className="ml-2 font-bold text-blue-700">{userData.personal_score !== undefined ? userData.personal_score.toFixed(1) : '-'}%</span></p>
+              </div>
               <Separator className="my-4" />
-              
               <div>
                 <p className="text-sm font-medium text-gray-500 mb-2">Foto KTP</p>
                 {userData.foto_ktp ? (
@@ -499,9 +617,17 @@ const VerifikatorUserDetail = () => {
                   <p className="text-base">{userData.alamat_keluarga}</p>
                 </div>
               </div>
-              
+              {/* Detail kelengkapan, gaji, dan hasil gabungan ekonomi keluarga */}
+              <div className="mt-4">
+                <p className="text-sm font-semibold text-gray-700">Kelengkapan Data Ekonomi Keluarga: <span className="ml-2 font-bold text-blue-700">{userData.family_score !== undefined ? userData.family_score.toFixed(1) : '-'}%</span></p>
+                <p className="text-sm font-semibold text-gray-700 mt-1">Persentase Gaji Keluarga (Total/1.500.000): <span className={`ml-2 font-bold ${(userData.pendapatan_ibu + userData.pendapatan_ayah) < 1500000 ? 'text-red-600' : 'text-green-700'}`}>{getFamilySalaryPercent().toFixed(1)}%</span></p>
+                <p className="text-xs text-gray-500">Total gaji: {formatCurrency(userData.pendapatan_ibu + userData.pendapatan_ayah)}</p>
+                {(userData.pendapatan_ibu + userData.pendapatan_ayah) < 1500000 && (
+                  <p className="text-xs text-red-600 font-semibold mt-1">Total gaji di bawah syarat minimum (1.500.000)</p>
+                )}
+                <p className="text-sm font-semibold text-gray-700 mt-1">Persentase Akhir Ekonomi Keluarga (Kelengkapan × Gaji): <span className="ml-2 font-bold text-purple-700">{getFinalFamilyScore().toFixed(1)}%</span></p>
+              </div>
               <Separator className="my-4" />
-              
               <div>
                 <p className="text-sm font-medium text-gray-500 mb-2">Foto KK</p>
                 {userData.foto_kk ? (
@@ -540,15 +666,45 @@ const VerifikatorUserDetail = () => {
                 <div>
                   <p className="text-sm font-medium text-gray-500">Nilai Semester 1</p>
                   <p className="text-base">{userData.nilai_semester_1}</p>
+                  {/* Bobot nilai semester 1 */}
+                  {userData.nilai_semester_1 && (
+                    <p className="text-xs text-blue-700 mt-1">
+                      Bobot: {Math.min(100, (parseFloat(userData.nilai_semester_1) / 85) * 100).toFixed(1)}%
+                    </p>
+                  )}
                 </div>
                 <div>
                   <p className="text-sm font-medium text-gray-500">Nilai Semester 2</p>
                   <p className="text-base">{userData.nilai_semester_2}</p>
+                  {/* Bobot nilai semester 2 */}
+                  {userData.nilai_semester_2 && (
+                    <p className="text-xs text-blue-700 mt-1">
+                      Bobot: {Math.min(100, (parseFloat(userData.nilai_semester_2) / 85) * 100).toFixed(1)}%
+                    </p>
+                  )}
                 </div>
               </div>
-              
+              {/* Detail kelengkapan, nilai, dan hasil gabungan akademik */}
+              <div className="mt-4">
+                <p className="text-sm font-semibold text-gray-700">Kelengkapan Data Akademik: <span className="ml-2 font-bold text-blue-700">{userData.academic_score !== undefined ? userData.academic_score.toFixed(1) : '-'}%</span></p>
+                {(() => {
+                  const score = getAcademicScorePercent();
+                  if (!score) return null;
+                  return (
+                    <>
+                      <p className="text-sm font-semibold text-gray-700 mt-1">Persentase Nilai Akademik (Rata-rata):
+                        <span className={`ml-2 font-bold ${score.avg < 85 ? 'text-red-600' : 'text-green-700'}`}>{score.percent.toFixed(1)}%</span>
+                      </p>
+                      <p className="text-xs text-gray-500">Rata-rata nilai: {score.avg.toFixed(2)}</p>
+                      {score.avg < 85 && (
+                        <p className="text-xs text-red-600 font-semibold mt-1">Nilai rata-rata di bawah syarat minimum beasiswa (85)</p>
+                      )}
+                    </>
+                  );
+                })()}
+                <p className="text-sm font-semibold text-gray-700 mt-1">Persentase Akhir Akademik (Kelengkapan × Nilai): <span className="ml-2 font-bold text-purple-700">{getFinalAcademicScore().toFixed(1)}%</span></p>
+              </div>
               <Separator className="my-4" />
-              
               <div>
                 <p className="text-sm font-medium text-gray-500 mb-2">Foto Ijazah</p>
                 {userData.foto_ijazah ? (

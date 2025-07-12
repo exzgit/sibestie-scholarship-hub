@@ -25,10 +25,8 @@ const VerifikatorPage = () => {
       setActivePanel("dashboard");
     } else if (path === "/verifikator/datauser") {
       setActivePanel("datauser");
-    } else if (path === "/verifikator/laporan") {
-      setActivePanel("laporan");
-    } else if (path === "/verifikator/berita") {
-      setActivePanel("berita");
+    // } else if (path === "/verifikator/laporan") {
+      // setActivePanel("laporan");
     } else if (path === "/verifikator/profile") {
       setActivePanel("profil");
     }
@@ -48,8 +46,7 @@ const VerifikatorPage = () => {
   const navItems = [
     { key: "dashboard", icon: <LayoutDashboard size={24} />, path: "/verifikator"},
     { key: "datauser", icon: <IdCard size={24} />, path: "/verifikator/datauser"},
-    { key: "laporan", icon: <BarChart size={24} />, path: "/verifikator/laporan" },
-    { key: "berita", icon: <Newspaper size={24} />, path: "/verifikator/berita"},
+    // { key: "laporan", icon: <BarChart size={24} />, path: "/verifikator/laporan" },
   ];
 
   const handleNavigation = (item: any) => {

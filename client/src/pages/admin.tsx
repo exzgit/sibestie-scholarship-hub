@@ -31,12 +31,10 @@ const AdminPage = () => {
       setActivePanel("datauser");
     } else if (path === "/admin/beasiswa") {
       setActivePanel("beasiswa");
-    } else if (path === "/admin/laporan") {
-      setActivePanel("laporan");
-    } else if (path === "/admin/donasi") {
-      setActivePanel("donasi");
-    } else if (path === "/admin/berita") {
-      setActivePanel("berita");
+    // } else if (path === "/admin/laporan") {
+      // setActivePanel("laporan");
+    // } else if (path === "/admin/donasi") {
+      // setActivePanel("donasi");
     } else if (path === "/admin/profile") {
       setActivePanel("profil");
     }
@@ -57,9 +55,8 @@ const AdminPage = () => {
     { key: "dashboard", icon: <LayoutDashboard size={24} />, path: "/admin"},
     { key: "datauser", icon: <IdCard size={24} />, path: "/admin/datauser"},
     { key: "beasiswa", icon: <School size={24} />, path: "/admin/beasiswa"},
-    { key: "laporan", icon: <BarChart size={24} />, path: "/admin/laporan" },
-    { key: "donasi", icon: <LucidePiggyBank size={24} />, path: "/admin/donasi"},
-    { key: "berita", icon: <Newspaper size={24} />, path: "/admin/berita"},
+    // { key: "laporan", icon: <BarChart size={24} />, path: "/admin/laporan" },
+    // { key: "donasi", icon: <LucidePiggyBank size={24} />, path: "/admin/donasi"},
   ];
 
   const handleNavigation = (item: any) => {

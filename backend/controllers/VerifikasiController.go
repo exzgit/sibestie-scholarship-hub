@@ -99,8 +99,11 @@ type VerificationStats struct {
 
 // VerificationFeedbackRequest represents the feedback data from verifikator
 type VerificationFeedbackRequest struct {
-	Message              string `json:"message" binding:"required"`
-	DataCompletenessRank int    `json:"data_completeness_rank"`
+	Message              string  `json:"message" binding:"required"`
+	DataCompletenessRank int     `json:"data_completeness_rank"`
+	PersonalMatch        float64 `json:"personal_match"`
+	AcademicMatch        float64 `json:"academic_match"`
+	FamilyMatch          float64 `json:"family_match"`
 }
 
 // CalculateDataCompletenessRank calculates the completeness rank based on weighted criteria
@@ -463,54 +466,54 @@ func GetVerifikasiDetail(c *gin.Context) {
 	familyScore := calculateFamilyDataScore(data) * 100.0
 
 	c.JSON(http.StatusOK, gin.H{
-		"id": data.ID,
-		"user_id": data.UserID,
-		"nik": data.NIK,
-		"nisn": data.NISN,
-		"nama_lengkap": data.NamaLengkap,
-		"tanggal_lahir": data.TanggalLahir,
-		"tempat_lahir": data.TempatLahir,
-		"alamat": data.Alamat,
-		"foto_ktp": data.FotoKTP,
-		"nomor_telepon": data.NomorTelepon,
-		"email": data.Email,
-		"instagram": data.Instagram,
-		"facebook": data.Facebook,
-		"tiktok": data.Tiktok,
-		"website": data.Website,
-		"linkedin": data.LinkedIn,
-		"twitter": data.Twitter,
-		"youtube": data.Youtube,
-		"whatsapp": data.Whatsapp,
-		"telegram": data.Telegram,
-		"other": data.Other,
-		"nama_ibu": data.NamaIbu,
-		"pekerjaan_ibu": data.PekerjaanIbu,
-		"pendapatan_ibu": data.PendapatanIbu,
-		"nama_ayah": data.NamaAyah,
-		"pekerjaan_ayah": data.PekerjaanAyah,
-		"pendapatan_ayah": data.PendapatanAyah,
-		"alamat_keluarga": data.AlamatKeluarga,
-		"foto_kk": data.FotoKK,
-		"saudara": data.Saudara,
-		"asal_sekolah": data.AsalSekolah,
-		"tahun_lulus": data.TahunLulus,
-		"nilai_semester_1": data.NilaiSemester1,
-		"nilai_semester_2": data.NilaiSemester2,
-		"foto_ijazah": data.FotoIjazah,
-		"foto_skl": data.FotoSKL,
-		"foto_sertifikat": data.FotoSertifikat,
-		"status": data.Status,
-		"verifikator_message": data.VerifikatorMessage,
+		"id":                     data.ID,
+		"user_id":                data.UserID,
+		"nik":                    data.NIK,
+		"nisn":                   data.NISN,
+		"nama_lengkap":           data.NamaLengkap,
+		"tanggal_lahir":          data.TanggalLahir,
+		"tempat_lahir":           data.TempatLahir,
+		"alamat":                 data.Alamat,
+		"foto_ktp":               data.FotoKTP,
+		"nomor_telepon":          data.NomorTelepon,
+		"email":                  data.Email,
+		"instagram":              data.Instagram,
+		"facebook":               data.Facebook,
+		"tiktok":                 data.Tiktok,
+		"website":                data.Website,
+		"linkedin":               data.LinkedIn,
+		"twitter":                data.Twitter,
+		"youtube":                data.Youtube,
+		"whatsapp":               data.Whatsapp,
+		"telegram":               data.Telegram,
+		"other":                  data.Other,
+		"nama_ibu":               data.NamaIbu,
+		"pekerjaan_ibu":          data.PekerjaanIbu,
+		"pendapatan_ibu":         data.PendapatanIbu,
+		"nama_ayah":              data.NamaAyah,
+		"pekerjaan_ayah":         data.PekerjaanAyah,
+		"pendapatan_ayah":        data.PendapatanAyah,
+		"alamat_keluarga":        data.AlamatKeluarga,
+		"foto_kk":                data.FotoKK,
+		"saudara":                data.Saudara,
+		"asal_sekolah":           data.AsalSekolah,
+		"tahun_lulus":            data.TahunLulus,
+		"nilai_semester_1":       data.NilaiSemester1,
+		"nilai_semester_2":       data.NilaiSemester2,
+		"foto_ijazah":            data.FotoIjazah,
+		"foto_skl":               data.FotoSKL,
+		"foto_sertifikat":        data.FotoSertifikat,
+		"status":                 data.Status,
+		"verifikator_message":    data.VerifikatorMessage,
 		"data_completeness_rank": data.DataCompletenessRank,
-		"verifikator_id": data.VerifikatorID,
-		"verified_at": data.VerifiedAt,
-		"created_at": data.CreatedAt,
-		"updated_at": data.UpdatedAt,
+		"verifikator_id":         data.VerifikatorID,
+		"verified_at":            data.VerifiedAt,
+		"created_at":             data.CreatedAt,
+		"updated_at":             data.UpdatedAt,
 		// Tambahan breakdown pembobotan
 		"personal_score": personalScore,
 		"academic_score": academicScore,
-		"family_score": familyScore,
+		"family_score":   familyScore,
 	})
 }
 
@@ -598,6 +601,10 @@ func ApproveVerifikasi(c *gin.Context) {
 	verifikasi.DataCompletenessRank = ranking
 	verifikasi.VerifikatorID = verifikatorID
 	verifikasi.VerifiedAt = &now
+	// Simpan input manual verifikator
+	verifikasi.PersonalMatch = feedback.PersonalMatch
+	verifikasi.AcademicMatch = feedback.AcademicMatch
+	verifikasi.FamilyMatch = feedback.FamilyMatch
 
 	if err := config.DB.Save(&verifikasi).Error; err != nil {
 		log.Printf("Error approving verification: %v", err)
@@ -652,6 +659,10 @@ func RejectVerifikasi(c *gin.Context) {
 	verifikasi.DataCompletenessRank = feedback.DataCompletenessRank
 	verifikasi.VerifikatorID = verifikatorID
 	verifikasi.VerifiedAt = &now
+	// Simpan input manual verifikator
+	verifikasi.PersonalMatch = feedback.PersonalMatch
+	verifikasi.AcademicMatch = feedback.AcademicMatch
+	verifikasi.FamilyMatch = feedback.FamilyMatch
 
 	if err := config.DB.Save(&verifikasi).Error; err != nil {
 		log.Printf("Error rejecting verification: %v", err)

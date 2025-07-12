@@ -53,5 +53,10 @@ type Verifikasi struct {
 	VerifikatorID        uint       `json:"verifikator_id"`
 	VerifiedAt           *time.Time `json:"verified_at"`
 
+	// Hasil Kesesuaian Data (input manual verifikator)
+	PersonalMatch float64 `json:"personal_match"`
+	AcademicMatch float64 `json:"academic_match"`
+	FamilyMatch   float64 `json:"family_match"`
+
 	CreatedAt time.Time `json:"created_at"`
 }

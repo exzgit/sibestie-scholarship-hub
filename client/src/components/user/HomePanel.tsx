@@ -3,45 +3,54 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Clock, Users, TrendingUp, BookOpen, Star, Calendar } from "lucide-react";
+import { useEffect, useState } from "react";
+import { Dialog, DialogContent, DialogHeader } from "@/components/ui/dialog";
+import { Navigate, useNavigate } from "react-router-dom";
+
+interface Scholarship {
+  id: number;
+  judul: string;
+  tipe: string;
+  author: string;
+  headerImage: string;
+  url: string;
+  deskripsi: string;
+  startDate: string;
+  endDate: string;
+}
 
 const HomePanel = () => {
-  const rekomendasiBeasiswa = [
-    {
-      id: 1,
-      judul: "Beasiswa KIP Kuliah 2024",
-      provider: "Kemendikbud",
-      deadline: "15 April 2024",
-      jenjang: "S1",
-      coverageAmount: "100%",
-      image: "https://images.unsplash.com/photo-1523050854058-8df90110c9f1?w=400&h=200&fit=crop"
-    },
-    {
-      id: 2,
-      judul: "Beasiswa Djarum Plus",
-      provider: "Djarum Foundation",
-      deadline: "28 Maret 2024",
-      jenjang: "D3-S1",
-      coverageAmount: "Parsial",
-      image: "https://images.unsplash.com/photo-1541829070764-84a7d30dd3f3?w=400&h=200&fit=crop"
-    }
-  ];
+  const [rekomendasiBeasiswa, setRekomenBeasiswa] = useState<Scholarship[]>([]);
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [selectedScholarship, setSelectedScholarship] = useState<Scholarship | null>(null);
 
-  const beritaTerbaru = [
-    {
-      id: 1,
-      judul: "Tips Lolos Seleksi Beasiswa LPDP 2024",
-      tanggal: "2 hari yang lalu",
-      kategori: "Tips",
-      image: "https://images.unsplash.com/photo-1434030216411-0b793f4b4173?w=300&h=150&fit=crop"
-    },
-    {
-      id: 2,
-      judul: "Pembukaan 50 Beasiswa Baru Bulan Ini",
-      tanggal: "1 minggu yang lalu",
-      kategori: "Info",
-      image: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=300&h=150&fit=crop"
+  const fetchScholarships = async () => {
+    setLoading(true);
+    try {
+      const response = await fetch("http://127.0.0.1:8081/api/scholarships");
+      const data = await response.json();
+      if (response.ok) {
+        // Urutkan berdasarkan ID (asumsi ID lebih tinggi = lebih baru) dan ambil 2 teratas
+        const sortedData = [...data].sort((a, b) => b.id - a.id);
+        setRekomenBeasiswa(sortedData);
+        setError("");
+      } else {
+        setError("Gagal mengambil data beasiswa");
+      }
+    } catch (err) {
+      setError("Tidak dapat terhubung ke server");
     }
-  ];
+    setLoading(false);
+  };
+
+  useEffect(() => {
+    fetchScholarships();
+  }, []);
+
+  const beasiswaTerbaru = rekomendasiBeasiswa.slice(0, 2);
+
+  const navigate = useNavigate();
 
   return (
     <div className="min-h-screen">
@@ -57,7 +66,7 @@ const HomePanel = () => {
           <div className="text-center text-white px-6">
             <h1 className="text-4xl font-bold mb-4">Sibestie</h1>
             <p className="text-xl opacity-90 mb-6">Gerbang Mudah Menuju Pendidikan Tinggi!</p>
-            <Button className="bg-white text-blue-600 hover:bg-gray-100 font-semibold px-8 py-3">
+            <Button onClick={() => navigate('/user/beasiswa') } className="bg-white text-blue-600 hover:bg-gray-100 font-semibold px-8 py-3">
               Mulai Pencarian Beasiswa
             </Button>
           </div>
@@ -102,49 +111,50 @@ const HomePanel = () => {
         </Card>
 
         {/* Recommended Scholarships */}
-        <Card className="mb-8 shadow-lg">
-          <CardHeader>
-            <div className="flex items-center space-x-2">
-              <Star className="text-yellow-500" size={24} />
-              <CardTitle className="text-xl">Beasiswa Rekomendasi Untuk Anda</CardTitle>
-            </div>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {rekomendasiBeasiswa.map((beasiswa) => (
-                <div key={beasiswa.id} className="border border-gray-200 rounded-lg overflow-hidden hover:shadow-md transition-shadow">
-                  <img
-                    src={beasiswa.image}
-                    alt={beasiswa.judul}
-                    className="w-full h-32 object-cover"
-                  />
-                  <div className="p-4">
-                    <div className="flex justify-between items-start mb-2">
-                      <Badge variant="outline" className="text-xs">
-                        {beasiswa.jenjang}
-                      </Badge>
-                      <span className="text-xs text-green-600 font-medium">
-                        {beasiswa.coverageAmount}
-                      </span>
+        {!loading && beasiswaTerbaru.length > 0 && (
+          <Card className="mb-8 shadow-lg">
+            <CardHeader>
+              <div className="flex items-center space-x-2">
+                <Star className="text-yellow-500" size={24} />
+                <CardTitle className="text-xl">Beasiswa Rekomendasi Untuk Anda</CardTitle>
+              </div>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {beasiswaTerbaru.map((beasiswa) => (
+                  <div key={beasiswa.id} className="border border-gray-200 rounded-lg overflow-hidden hover:shadow-md transition-shadow">
+                    {beasiswa.headerImage && (
+                      <img
+                        src={beasiswa.headerImage}
+                        alt={beasiswa.judul}
+                        className="w-full h-32 object-cover"
+                      />
+                    )}
+                    <div className="p-4">
+                      <div className="flex justify-between items-start mb-2">
+                        <Badge variant="outline" className="text-xs">
+                          {beasiswa.tipe || 'Beasiswa'}
+                        </Badge>
+                      </div>
+                      <h3 className="font-semibold text-gray-800 mb-1">{beasiswa.judul}</h3>
+                      <p className="text-sm text-gray-600 mb-2">{beasiswa.author}</p>
+                      <div className="flex items-center text-xs text-red-600 mb-3">
+                        <Calendar size={14} className="mr-1" />
+                        Deadline: {beasiswa.endDate}
+                      </div>
+                      <Button size="sm" className="w-full bg-blue-600 hover:bg-blue-700" onClick={() => setSelectedScholarship(beasiswa)}>
+                        Lihat Detail
+                      </Button>
                     </div>
-                    <h3 className="font-semibold text-gray-800 mb-1">{beasiswa.judul}</h3>
-                    <p className="text-sm text-gray-600 mb-2">{beasiswa.provider}</p>
-                    <div className="flex items-center text-xs text-red-600 mb-3">
-                      <Calendar size={14} className="mr-1" />
-                      Deadline: {beasiswa.deadline}
-                    </div>
-                    <Button size="sm" className="w-full bg-blue-600 hover:bg-blue-700">
-                      Lihat Detail
-                    </Button>
                   </div>
-                </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        )}
 
         {/* Latest News */}
-        <Card className="mb-8 shadow-lg">
+        {/* <Card className="mb-8 shadow-lg">
           <CardHeader>
             <div className="flex items-center space-x-2">
               <TrendingUp className="text-blue-500" size={24} />
@@ -176,50 +186,7 @@ const HomePanel = () => {
               ))}
             </div>
           </CardContent>
-        </Card>
-
-        {/* Quick Actions */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-          <Card className="shadow-md hover:shadow-lg transition-shadow cursor-pointer group">
-            <CardContent className="p-6 text-center">
-              <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-3 group-hover:bg-blue-200 transition-colors">
-                <BookOpen className="text-blue-600" size={24} />
-              </div>
-              <h3 className="font-semibold text-gray-800 mb-1">Cari Beasiswa</h3>
-              <p className="text-xs text-gray-600">Temukan beasiswa sesuai kriteria</p>
-            </CardContent>
-          </Card>
-          
-          <Card className="shadow-md hover:shadow-lg transition-shadow cursor-pointer group">
-            <CardContent className="p-6 text-center">
-              <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-3 group-hover:bg-green-200 transition-colors">
-                <Users className="text-green-600" size={24} />
-              </div>
-              <h3 className="font-semibold text-gray-800 mb-1">Konsultasi</h3>
-              <p className="text-xs text-gray-600">Dapatkan bantuan gratis</p>
-            </CardContent>
-          </Card>
-          
-          <Card className="shadow-md hover:shadow-lg transition-shadow cursor-pointer group">
-            <CardContent className="p-6 text-center">
-              <div className="w-12 h-12 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-3 group-hover:bg-purple-200 transition-colors">
-                <Clock className="text-purple-600" size={24} />
-              </div>
-              <h3 className="font-semibold text-gray-800 mb-1">Deadline</h3>
-              <p className="text-xs text-gray-600">Pantau jadwal penting</p>
-            </CardContent>
-          </Card>
-          
-          <Card className="shadow-md hover:shadow-lg transition-shadow cursor-pointer group">
-            <CardContent className="p-6 text-center">
-              <div className="w-12 h-12 bg-yellow-100 rounded-full flex items-center justify-center mx-auto mb-3 group-hover:bg-yellow-200 transition-colors">
-                <Star className="text-yellow-600" size={24} />
-              </div>
-              <h3 className="font-semibold text-gray-800 mb-1">Favorit</h3>
-              <p className="text-xs text-gray-600">Beasiswa yang disimpan</p>
-            </CardContent>
-          </Card>
-        </div>
+        </Card> */}
 
         {/* Educational Tips */}
         <Card className="shadow-lg">
@@ -262,6 +229,56 @@ const HomePanel = () => {
           </CardContent>
         </Card>
       </div>
+
+      {/* Dialog Detail Beasiswa */}
+      <Dialog
+        open={!!selectedScholarship}
+        onOpenChange={(open) => !open && setSelectedScholarship(null)}
+      >
+        <DialogContent className="w-full max-w-3xl max-h-[95vh] overflow-y-auto rounded-xl border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 shadow-lg">
+          {selectedScholarship && (
+            <>
+              <DialogHeader>
+                <h2 className="text-xl font-bold text-zinc-900 dark:text-white">
+                  {selectedScholarship.judul}
+                </h2>
+                <p className="text-sm text-zinc-500 dark:text-zinc-400">
+                  By {selectedScholarship.author}
+                </p>
+                <p className="text-sm text-zinc-500 dark:text-zinc-400">
+                  Pendaftaran: {selectedScholarship.startDate} - {selectedScholarship.endDate}
+                </p>
+              </DialogHeader>
+
+              <div className="mt-4 space-y-4">
+                {selectedScholarship.headerImage && (
+                  <img
+                    src={selectedScholarship.headerImage}
+                    alt="Header"
+                    className="w-full max-h-[300px] object-cover rounded-lg"
+                  />
+                )}
+                <div
+                  className="text-sm text-zinc-800 dark:text-zinc-200 prose dark:prose-invert max-w-none"
+                  dangerouslySetInnerHTML={{
+                    __html: selectedScholarship.deskripsi,
+                  }}
+                />
+                {selectedScholarship.url && (
+                  <a
+                    href={selectedScholarship.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-block text-sm font-medium text-blue-600 dark:text-blue-400 underline"
+                  >
+                    Kunjungi Link Beasiswa
+                  </a>
+                )}
+              </div>
+            </>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
