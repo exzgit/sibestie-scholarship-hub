@@ -6,6 +6,7 @@ import {
 } from "lucide-react";
 import { useAuth } from "../contexts/AuthContext";
 import { Outlet, useNavigate, useLocation } from "react-router-dom";
+import RoleHeader from "../components/ui/role-header";
 
 import { TableViewDataUser } from "@/components/admin/AdminDataUser";
 import { AdminDashboard } from "@/components/admin/AdminDashboard";
@@ -30,12 +31,10 @@ const AdminPage = () => {
       setActivePanel("datauser");
     } else if (path === "/admin/beasiswa") {
       setActivePanel("beasiswa");
-    } else if (path === "/admin/laporan") {
-      setActivePanel("laporan");
-    } else if (path === "/admin/donasi") {
-      setActivePanel("donasi");
-    } else if (path === "/admin/berita") {
-      setActivePanel("berita");
+    // } else if (path === "/admin/laporan") {
+      // setActivePanel("laporan");
+    // } else if (path === "/admin/donasi") {
+      // setActivePanel("donasi");
     } else if (path === "/admin/profile") {
       setActivePanel("profil");
     }
@@ -56,9 +55,8 @@ const AdminPage = () => {
     { key: "dashboard", icon: <LayoutDashboard size={24} />, path: "/admin"},
     { key: "datauser", icon: <IdCard size={24} />, path: "/admin/datauser"},
     { key: "beasiswa", icon: <School size={24} />, path: "/admin/beasiswa"},
-    { key: "laporan", icon: <BarChart size={24} />, path: "/admin/laporan" },
-    { key: "donasi", icon: <LucidePiggyBank size={24} />, path: "/admin/donasi"},
-    { key: "berita", icon: <Newspaper size={24} />, path: "/admin/berita"},
+    // { key: "laporan", icon: <BarChart size={24} />, path: "/admin/laporan" },
+    // { key: "donasi", icon: <LucidePiggyBank size={24} />, path: "/admin/donasi"},
   ];
 
   const handleNavigation = (item: any) => {
@@ -87,8 +85,13 @@ const AdminPage = () => {
       {/* Desktop layout */}
       <div className="flex hidden md:block min-h-screen bg-gradient-to-b from-white to-zinc-100 dark:from-[#0d0d0d] dark:to-[#111]">
         
+        {/* Role Header */}
+        <div className="fixed top-0 left-0 right-0 z-10">
+          <RoleHeader />
+        </div>
+        
         {/* Sidebar */}
-        <div className="h-screen w-18 fixed border-r shadow-sm bg-white dark:bg-zinc-900 flex flex-col justify-between py-4 px-2">
+        <div className="h-screen w-18 top-0 fixed border-r shadow-sm bg-white dark:bg-zinc-900 flex flex-col justify-between py-4 px-2 mt-16">
           <div className="flex flex-col items-center gap-4">
             <h1 className="font-extrabold text-blue-600 text-3xl border-b pb-3">SB</h1>
             {navItems.map(item => (
@@ -123,7 +126,7 @@ const AdminPage = () => {
         </div>
 
         {/* Panel Konten */}
-        <div className="flex-1 ml-14 transition-all duration-300 overflow-y-auto">
+        <div className="flex-1 ml-14 transition-all duration-300 overflow-y-auto mt-16">
           <Outlet />
         </div>
       </div>

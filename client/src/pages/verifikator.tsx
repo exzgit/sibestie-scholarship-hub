@@ -6,14 +6,11 @@ import {
 } from "lucide-react";
 import { useAuth } from "../contexts/AuthContext";
 import { Outlet, useNavigate, useLocation } from "react-router-dom";
+import RoleHeader from "../components/ui/role-header";
 
-import { TableViewDataUser } from "@/components/admin/AdminDataUser";
-import { AdminDashboard } from "@/components/admin/AdminDashboard";
-import { AdminScholarship } from "@/components/admin/AdminScholarship";
-import { AdminStatistic } from "@/components/admin/AdminStatistic";
-import { AdminProfile } from "@/components/admin/AdminProfile";
-import { AdminNews } from "@/components/admin/AdminNews";
-import { AdminAccounting } from "@/components/admin/AdminAccounting";
+import VerifikatorDashboard from "@/components/verifikator/VerifikatorDashboard";
+import VerifikatorUserList from "@/components/verifikator/VerifikatorUserList";
+import VerifikatorUserDetail from "@/components/verifikator/VerifikatorUserDetail";
 
 const VerifikatorPage = () => {
   const [activePanel, setActivePanel] = useState("dashboard");
@@ -28,14 +25,8 @@ const VerifikatorPage = () => {
       setActivePanel("dashboard");
     } else if (path === "/verifikator/datauser") {
       setActivePanel("datauser");
-    } else if (path === "/verifikator/beasiswa") {
-      setActivePanel("beasiswa");
-    } else if (path === "/verifikator/laporan") {
-      setActivePanel("laporan");
-    } else if (path === "/verifikator/donasi") {
-      setActivePanel("donasi");
-    } else if (path === "/verifikator/berita") {
-      setActivePanel("berita");
+    // } else if (path === "/verifikator/laporan") {
+      // setActivePanel("laporan");
     } else if (path === "/verifikator/profile") {
       setActivePanel("profil");
     }
@@ -55,15 +46,28 @@ const VerifikatorPage = () => {
   const navItems = [
     { key: "dashboard", icon: <LayoutDashboard size={24} />, path: "/verifikator"},
     { key: "datauser", icon: <IdCard size={24} />, path: "/verifikator/datauser"},
-    { key: "beasiswa", icon: <School size={24} />, path: "/verifikator/beasiswa"},
-    { key: "laporan", icon: <BarChart size={24} />, path: "/verifikator/laporan" },
-    { key: "donasi", icon: <LucidePiggyBank size={24} />, path: "/verifikator/donasi"},
-    { key: "berita", icon: <Newspaper size={24} />, path: "/verifikator/berita"},
+    // { key: "laporan", icon: <BarChart size={24} />, path: "/verifikator/laporan" },
   ];
 
   const handleNavigation = (item: any) => {
     setActivePanel(item.key);
     navigate(item.path);
+  };
+
+  // Render the appropriate component based on the active panel
+  const renderContent = () => {
+    if (location.pathname.match(/\/verifikator\/datauser\/\d+/)) {
+      return <VerifikatorUserDetail />;
+    }
+    
+    switch (activePanel) {
+      case "dashboard":
+        return <VerifikatorDashboard />;
+      case "datauser":
+        return <VerifikatorUserList />;
+      default:
+        return <VerifikatorDashboard />;
+    }
   };
 
   return (
@@ -87,8 +91,13 @@ const VerifikatorPage = () => {
       {/* Desktop layout */}
       <div className="flex hidden md:block min-h-screen bg-gradient-to-b from-white to-zinc-100 dark:from-[#0d0d0d] dark:to-[#111]">
         
+        {/* Role Header */}
+        <div className="fixed top-0 left-0 right-0 z-10">
+          <RoleHeader />
+        </div>
+        
         {/* Sidebar */}
-        <div className="h-screen w-18 fixed border-r shadow-sm bg-white dark:bg-zinc-900 flex flex-col justify-between py-4 px-2">
+        <div className="h-screen top-0 w-18 fixed border-r shadow-sm bg-white dark:bg-zinc-900 flex flex-col justify-between py-4 px-2 mt-16">
           <div className="flex flex-col items-center gap-4">
             <h1 className="font-extrabold text-blue-600 text-3xl border-b pb-3">SB</h1>
             {navItems.map(item => (
@@ -123,8 +132,8 @@ const VerifikatorPage = () => {
         </div>
 
         {/* Panel Konten */}
-        <div className="flex-1 ml-14 transition-all duration-300 overflow-y-auto">
-          <Outlet />
+        <div className="flex-1 ml-14 transition-all duration-300 overflow-y-auto mt-16">
+          {renderContent()}
         </div>
       </div>
     </>

@@ -1,15 +1,8 @@
 import { useEffect, useState } from "react";
 import { Home, Newspaper, Award, Info, Phone, User } from "lucide-react";
-import HomePanel from "../components/user/HomePanel";
-import BeritaPanel from "../components/user/BeritaPanel";
-import BeasiswaPanel from "../components/user/BeasiswaPanel";
-import InformasiPanel from "../components/user/InformasiPanel";
-import KonsultasiPanel from "../components/user/KonsultasiPanel";
-import ProfilePanel from "../components/user/ProfilePanel";
-import LoginRegister from "../components/user/LoginRegister";
 import { useAuth } from "../contexts/AuthContext";
-import VerifikasiPanel from "@/components/user/VerifikasiPanel";
 import { Outlet, useNavigate, useLocation } from "react-router-dom";
+import RoleHeader from "../components/ui/role-header";
 
 const UserPage = () => {
   const [activePanel, setActivePanel] = useState("home");
@@ -22,8 +15,6 @@ const UserPage = () => {
     const path = location.pathname;
     if (path === "/user" || path === "/user/") {
       setActivePanel("home");
-    } else if (path === "/user/berita") {
-      setActivePanel("berita");
     } else if (path === "/user/beasiswa") {
       setActivePanel("beasiswa");
     } else if (path === "/user/informasi") {
@@ -48,33 +39,8 @@ const UserPage = () => {
     localStorage.setItem("userActivePanel", activePanel);
   }, [activePanel]);
 
-  const renderPanel = () => {
-    switch (activePanel) {
-      case "home":
-        return <HomePanel />;
-      case "berita":
-        return <BeritaPanel />;
-      case "beasiswa":
-        return <BeasiswaPanel />;
-      case "informasi":
-        return <InformasiPanel />;
-      case "konsultasi":
-        return <KonsultasiPanel />;
-      case "profile":
-        if (!isAuthenticated) {
-          return <LoginRegister />;
-        }
-        return <ProfilePanel onVerificationClick={() => setActivePanel("verifikasi")} />;
-      case "verifikasi":
-        return <VerifikasiPanel />;
-      default:
-        return <HomePanel />;
-    }
-  };
-
   const navigationItems = [
     { id: "home", icon: Home, label: "Home", path: "/user"},
-    { id: "berita", icon: Newspaper, label: "Berita", path: "/user/berita" },
     { id: "beasiswa", icon: Award, label: "Beasiswa", path: "/user/beasiswa" },
     { id: "informasi", icon: Info, label: "Info", path: "/user/informasi" },
     { id: "konsultasi", icon: Phone, label: "Konsultasi", path: "/user/konsultasi" },
@@ -88,6 +54,9 @@ const UserPage = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 pb-20">
+      {/* Role Header */}
+      <RoleHeader />
+      
       {/* Main Content */}
       <div className="min-h-screen overflow-y-auto">
         <Outlet />

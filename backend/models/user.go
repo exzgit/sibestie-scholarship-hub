@@ -41,23 +41,61 @@ type UserData struct {
 	gorm.Model
 
 	// Personal Data
-	UserID         uint
-	NIK            string `gorm:"type:varchar(20)"`
-	NISN           string `gorm:"type:varchar(20)"`
-	FullName       string `gorm:"type:varchar(100)"`
-	BirthDate      time.Time
-	BirthPlace     string
-	SchoolOrigin   string
-	Graduated      string
-	GraduationYear string
-	NomorTelepon   string
+	UserID       uint
+	NIK          string `gorm:"type:varchar(20)"`
+	NISN         string `gorm:"type:varchar(20)"`
+	FullName     string `gorm:"type:varchar(100)"`
+	BirthDate    time.Time
+	BirthPlace   string
+	NomorTelepon string
+	Address      string
+
+	// Social Media
+	Email         string `gorm:"type:varchar(100)"`
+	SocialMediaID uint
+	SocialMedia   SocialMedia `gorm:"foreignKey:SocialMediaID"`
+
+	// Academic Data
+	AcademicID uint
+	Academic   Academic `gorm:"foreignKey:AcademicID"`
 
 	// Family Data
 	FamilyID uint
 	Family   Family `gorm:"foreignKey:FamilyID"`
 
-	// Academic Data
-	SourceSertificated []SourceFile `gorm:"foreignKey:UserDataID"`
+	SourceKTP []SourceFile `gorm:"foreignKey:UserDataID"`
+}
+
+// ---------- SOSIAL MEDIA ----------
+type SocialMedia struct {
+	gorm.Model
+	UserID    uint
+	Instagram string `gorm:"type:varchar(100)"`
+	Facebook  string `gorm:"type:varchar(100)"`
+	Tiktok    string `gorm:"type:varchar(100)"`
+	Website   string `gorm:"type:varchar(100)"`
+	LinkedIn  string `gorm:"type:varchar(100)"`
+	Twitter   string `gorm:"type:varchar(100)"`
+	Youtube   string `gorm:"type:varchar(100)"`
+	Whatsapp  string `gorm:"type:varchar(100)"`
+	Telegram  string `gorm:"type:varchar(100)"`
+	Other     string `gorm:"type:varchar(100)"`
+}
+
+// ---------- ACADEMIC ----------
+// Academic is a data of the academic
+type Academic struct {
+	gorm.Model
+	UserID         uint
+	SchoolName     string `gorm:"type:varchar(100)"`
+	SchoolOrigin   string `gorm:"type:varchar(100)"`
+	GraduationYear string
+
+	RangeSemester []string `gorm:"type:varchar(100)"`
+
+	SourceCertificate []SourceFile `gorm:"foreignKey:UserDataID"`
+	SourceIjazah      []SourceFile `gorm:"foreignKey:UserDataID"`
+	SourceSKL         []SourceFile `gorm:"foreignKey:UserDataID"`
 }
 
 // ---------- CHILDREN ----------

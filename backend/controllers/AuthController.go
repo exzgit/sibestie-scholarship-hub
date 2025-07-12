@@ -54,7 +54,7 @@ func RegisterHandler(c *gin.Context) {
 		Name:     input.Name,
 		Email:    input.Email,
 		Password: encryptedPassword,
-		Role:     "verifikator",
+		Role:     "user",
 	}
 
 	if err := config.DB.Create(&user).Error; err != nil {
